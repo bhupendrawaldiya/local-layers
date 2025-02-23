@@ -1,8 +1,15 @@
-
 import { useEffect, useState } from "react";
-import { Search, Info, MapPin, Users } from "lucide-react";
+import { Search, Info, MapPin, Users, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
+
+interface Review {
+  id: number;
+  authorName: string;
+  rating: number;
+  comment: string;
+  date: string;
+}
 
 interface ListingCard {
   id: number;
@@ -10,6 +17,7 @@ interface ListingCard {
   price: number;
   image: string;
   location: string;
+  reviews: Review[];
 }
 
 const featuredListings: ListingCard[] = [
@@ -19,6 +27,22 @@ const featuredListings: ListingCard[] = [
     price: 299,
     image: "https://images.unsplash.com/photo-1519947486511-46149fa0a254?auto=format&fit=crop&q=80",
     location: "Downtown",
+    reviews: [
+      {
+        id: 1,
+        authorName: "John D.",
+        rating: 5,
+        comment: "Beautiful chair, exactly as described!",
+        date: "2024-03-15"
+      },
+      {
+        id: 2,
+        authorName: "Sarah M.",
+        rating: 4,
+        comment: "Great quality, but shipping took longer than expected",
+        date: "2024-03-10"
+      }
+    ]
   },
   {
     id: 2,
@@ -26,6 +50,15 @@ const featuredListings: ListingCard[] = [
     price: 199,
     image: "https://images.unsplash.com/photo-1532372320978-9a4bf69426c9?auto=format&fit=crop&q=80",
     location: "Westside",
+    reviews: [
+      {
+        id: 3,
+        authorName: "Mike R.",
+        rating: 5,
+        comment: "Stunning craftsmanship!",
+        date: "2024-03-12"
+      }
+    ]
   },
   {
     id: 3,
@@ -33,6 +66,7 @@ const featuredListings: ListingCard[] = [
     price: 149,
     image: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&q=80",
     location: "Eastside",
+    reviews: []
   },
   {
     id: 4,
@@ -40,6 +74,7 @@ const featuredListings: ListingCard[] = [
     price: 450,
     image: "https://images.unsplash.com/photo-1518733057094-95b53143d2a7?auto=format&fit=crop&q=80",
     location: "North End",
+    reviews: []
   },
   {
     id: 5,
@@ -47,6 +82,7 @@ const featuredListings: ListingCard[] = [
     price: 899,
     image: "https://images.unsplash.com/photo-1615529162924-f8605388461d?auto=format&fit=crop&q=80",
     location: "South Side",
+    reviews: []
   },
   {
     id: 6,
@@ -54,6 +90,7 @@ const featuredListings: ListingCard[] = [
     price: 275,
     image: "https://images.unsplash.com/photo-1542456885-89667376a074?auto=format&fit=crop&q=80",
     location: "Downtown",
+    reviews: []
   },
   {
     id: 7,
@@ -61,6 +98,7 @@ const featuredListings: ListingCard[] = [
     price: 89,
     image: "https://images.unsplash.com/photo-1578500351865-d6c3706f46bc?auto=format&fit=crop&q=80",
     location: "Arts District",
+    reviews: []
   },
   {
     id: 8,
@@ -68,6 +106,7 @@ const featuredListings: ListingCard[] = [
     price: 65,
     image: "https://images.unsplash.com/photo-1617142108319-66c7ab45c711?auto=format&fit=crop&q=80",
     location: "Cultural Center",
+    reviews: []
   },
   {
     id: 9,
@@ -75,6 +114,7 @@ const featuredListings: ListingCard[] = [
     price: 175,
     image: "https://images.unsplash.com/photo-1631891337014-c45549f28587?auto=format&fit=crop&q=80",
     location: "Warehouse District",
+    reviews: []
   },
 ];
 
@@ -111,11 +151,22 @@ const Index = () => {
     }
   };
 
+  const renderStars = (rating: number) => {
+    return Array.from({ length: 5 }, (_, index) => (
+      <Star
+        key={index}
+        size={16}
+        className={`${
+          index < rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+        }`}
+      />
+    ));
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       
-      {/* Hero Section */}
       <section className="pt-20 pb-32 px-4">
         <div className="max-w-7xl mx-auto pt-20">
           <div className="text-center space-y-8 fade-in opacity-0 translate-y-4 transition-all duration-700">
@@ -126,7 +177,6 @@ const Index = () => {
               Buy and sell unique items in your neighborhood. Connect with local sellers and find hidden gems.
             </p>
             
-            {/* Search Bar */}
             <div className="max-w-xl mx-auto mt-8">
               <div className="relative">
                 <Search className="absolute left-4 top-3.5 h-5 w-5 text-gray-400" />
@@ -150,7 +200,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Featured Listings */}
       <section className="pb-32 px-4">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-2xl font-semibold text-gray-900 mb-8">
@@ -183,6 +232,33 @@ const Index = () => {
                     </div>
                     <p className="text-lg font-semibold text-gray-900">${listing.price}</p>
                   </div>
+                  
+                  <div className="mt-4 border-t pt-4">
+                    <div className="flex flex-row-reverse gap-4 overflow-x-auto">
+                      {listing.reviews.map((review) => (
+                        <div
+                          key={review.id}
+                          className="min-w-[200px] bg-gray-50 p-3 rounded-lg"
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <p className="text-sm font-medium text-gray-900">
+                              {review.authorName}
+                            </p>
+                            <div className="flex">
+                              {renderStars(review.rating)}
+                            </div>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-1">{review.comment}</p>
+                          <p className="text-xs text-gray-400">
+                            {new Date(review.date).toLocaleDateString()}
+                          </p>
+                        </div>
+                      ))}
+                      {listing.reviews.length === 0 && (
+                        <p className="text-sm text-gray-500 italic">No reviews yet</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
@@ -190,7 +266,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* About Section */}
       <section className="bg-white py-24 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16 fade-in opacity-0 translate-y-4">
