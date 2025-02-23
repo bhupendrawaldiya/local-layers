@@ -34,6 +34,48 @@ const featuredListings: ListingCard[] = [
     image: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&q=80",
     location: "Eastside",
   },
+  {
+    id: 4,
+    title: "Antique Wooden Desk",
+    price: 450,
+    image: "https://images.unsplash.com/photo-1518733057094-95b53143d2a7?auto=format&fit=crop&q=80",
+    location: "North End",
+  },
+  {
+    id: 5,
+    title: "Mid-Century Dining Set",
+    price: 899,
+    image: "https://images.unsplash.com/photo-1615529162924-f8605388461d?auto=format&fit=crop&q=80",
+    location: "South Side",
+  },
+  {
+    id: 6,
+    title: "Vintage Record Player",
+    price: 275,
+    image: "https://images.unsplash.com/photo-1542456885-89667376a074?auto=format&fit=crop&q=80",
+    location: "Downtown",
+  },
+  {
+    id: 7,
+    title: "Artisan Ceramic Vase",
+    price: 89,
+    image: "https://images.unsplash.com/photo-1578500351865-d6c3706f46bc?auto=format&fit=crop&q=80",
+    location: "Arts District",
+  },
+  {
+    id: 8,
+    title: "Boho Wall Tapestry",
+    price: 65,
+    image: "https://images.unsplash.com/photo-1617142108319-66c7ab45c711?auto=format&fit=crop&q=80",
+    location: "Cultural Center",
+  },
+  {
+    id: 9,
+    title: "Industrial Bar Stools",
+    price: 175,
+    image: "https://images.unsplash.com/photo-1631891337014-c45549f28587?auto=format&fit=crop&q=80",
+    location: "Warehouse District",
+  },
 ];
 
 const Index = () => {
