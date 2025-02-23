@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
@@ -37,6 +37,9 @@ const featuredListings: ListingCard[] = [
 ];
 
 const Index = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredListings, setFilteredListings] = useState(featuredListings);
+
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
@@ -50,6 +53,21 @@ const Index = () => {
 
     return () => observer.disconnect();
   }, []);
+
+  const handleSearch = () => {
+    const filtered = featuredListings.filter((listing) =>
+      listing.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      listing.location.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setFilteredListings(filtered);
+  };
+
+  const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    if (e.target.value === "") {
+      setFilteredListings(featuredListings);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -74,8 +92,14 @@ const Index = () => {
                   type="text"
                   placeholder="Search for items near you..."
                   className="w-full pl-12 pr-4 py-3 rounded-full border border-gray-200 focus:outline-none focus:border-gray-300 transition-all"
+                  value={searchTerm}
+                  onChange={handleSearchInput}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                 />
-                <Button className="absolute right-2 top-2">
+                <Button 
+                  className="absolute right-2 top-2"
+                  onClick={handleSearch}
+                >
                   Search
                 </Button>
               </div>
@@ -87,9 +111,16 @@ const Index = () => {
       {/* Featured Listings */}
       <section className="pb-32 px-4">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-8">Featured Listings</h2>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-8">
+            {filteredListings.length === 0 
+              ? "No results found" 
+              : searchTerm 
+                ? `Search Results (${filteredListings.length})` 
+                : "Featured Listings"
+            }
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredListings.map((listing, index) => (
+            {filteredListings.map((listing, index) => (
               <div
                 key={listing.id}
                 className={`bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 fade-in opacity-0 translate-y-4`}
