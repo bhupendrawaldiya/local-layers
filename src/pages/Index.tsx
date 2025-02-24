@@ -169,14 +169,9 @@ const Index = () => {
         </div>
       </section>
 
-      <section className="pb-32 px-4 bg-gray-50">
+      <section className="py-16 px-4 bg-gray-50">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-8">Latest Reviews</h2>
-          <div className="grid grid-cols-1 gap-8">
-            {filteredListings.map((listing) => (
-              <ListingReviews key={`reviews-${listing.id}`} listing={listing} />
-            ))}
-          </div>
+          <ListingReviews />
         </div>
       </section>
 
