@@ -201,7 +201,7 @@ const Index = () => {
         </div>
       </section>
 
-      <section className="pb-32 px-4">
+      <section className="pb-16 px-4">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-2xl font-semibold text-gray-900 mb-8">
             {filteredListings.length === 0 
@@ -215,7 +215,7 @@ const Index = () => {
             {filteredListings.map((listing, index) => (
               <div
                 key={listing.id}
-                className={`bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 fade-in opacity-0 translate-y-4`}
+                className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 fade-in opacity-0 translate-y-4"
                 style={{ animationDelay: `${index * 150}ms` }}
               >
                 <div className="aspect-w-16 aspect-h-9">
@@ -233,35 +233,44 @@ const Index = () => {
                     </div>
                     <p className="text-lg font-semibold text-gray-900">${listing.price}</p>
                   </div>
-                  
-                  <div className="mt-4 border-t pt-4">
-                    <div className="flex flex-row-reverse gap-4 overflow-x-auto">
-                      {listing.reviews.map((review) => (
-                        <div
-                          key={review.id}
-                          className="min-w-[200px] bg-gray-50 p-3 rounded-lg"
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <p className="text-sm font-medium text-gray-900">
-                              {review.authorName}
-                            </p>
-                            <div className="flex">
-                              {renderStars(review.rating)}
-                            </div>
-                          </div>
-                          <p className="text-sm text-gray-600 mb-1">{review.comment}</p>
-                          <p className="text-xs text-gray-400">
-                            {new Date(review.date).toLocaleDateString()}
-                          </p>
-                        </div>
-                      ))}
-                      {listing.reviews.length === 0 && (
-                        <p className="text-sm text-gray-500 italic">No reviews yet</p>
-                      )}
-                    </div>
-                  </div>
                 </div>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="pb-32 px-4 bg-gray-50">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-8">Latest Reviews</h2>
+          <div className="grid grid-cols-1 gap-8">
+            {filteredListings.map((listing) => (
+              listing.reviews.length > 0 && (
+                <div key={`reviews-${listing.id}`} className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900">{listing.title}</h3>
+                  <div className="flex gap-4 overflow-x-auto pb-4">
+                    {listing.reviews.map((review) => (
+                      <div
+                        key={review.id}
+                        className="min-w-[300px] bg-white p-6 rounded-lg shadow-sm animate-[slide-in-right_0.5s_ease-out] hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex items-center justify-between mb-4">
+                          <p className="font-medium text-gray-900">
+                            {review.authorName}
+                          </p>
+                          <div className="flex">
+                            {renderStars(review.rating)}
+                          </div>
+                        </div>
+                        <p className="text-gray-600 mb-2">{review.comment}</p>
+                        <p className="text-sm text-gray-400">
+                          {new Date(review.date).toLocaleDateString()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
             ))}
           </div>
         </div>
