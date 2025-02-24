@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Search, Info, MapPin, Users, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -115,7 +116,7 @@ const featuredListings: ListingCard[] = [
     image: "https://images.unsplash.com/photo-1631891337014-c45549f28587?auto=format&fit=crop&q=80",
     location: "Warehouse District",
     reviews: []
-  },
+  }
 ];
 
 const Index = () => {
