@@ -1,11 +1,28 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X, Heart, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabase";
+import type { User } from "@supabase/supabase-js";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
@@ -23,12 +40,21 @@ const Navbar = () => {
               <Heart className="h-4 w-4 mr-2" />
               Wishlist
             </Button>
-            <Link to="/signin">
-              <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900">
-                <User className="h-4 w-4 mr-2" />
-                Sign In
-              </Button>
-            </Link>
+            {user ? (
+              <Link to="/account">
+                <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900">
+                  <User className="h-4 w-4 mr-2" />
+                  Account
+                </Button>
+              </Link>
+            ) : (
+              <Link to="/signin">
+                <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900">
+                  <User className="h-4 w-4 mr-2" />
+                  Sign In
+                </Button>
+              </Link>
+            )}
             <Button size="sm">List an Item</Button>
           </div>
 
@@ -54,12 +80,21 @@ const Navbar = () => {
               <Heart className="h-4 w-4 mr-2" />
               Wishlist
             </Button>
-            <Link to="/signin">
-              <Button variant="ghost" size="sm" className="w-full justify-start text-gray-600 hover:text-gray-900">
-                <User className="h-4 w-4 mr-2" />
-                Sign In
-              </Button>
-            </Link>
+            {user ? (
+              <Link to="/account">
+                <Button variant="ghost" size="sm" className="w-full justify-start text-gray-600 hover:text-gray-900">
+                  <User className="h-4 w-4 mr-2" />
+                  Account
+                </Button>
+              </Link>
+            ) : (
+              <Link to="/signin">
+                <Button variant="ghost" size="sm" className="w-full justify-start text-gray-600 hover:text-gray-900">
+                  <User className="h-4 w-4 mr-2" />
+                  Sign In
+                </Button>
+              </Link>
+            )}
             <Button size="sm" className="w-full">List an Item</Button>
           </div>
         </div>

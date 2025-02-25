@@ -6,6 +6,8 @@ import { AboutSection } from "@/components/home/AboutSection";
 import Navbar from "@/components/Navbar";
 import { ListingCard } from "@/types/listings";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabase";
+import type { User } from "@supabase/supabase-js";
 
 const featuredListings: ListingCard[] = [
   {
@@ -109,6 +111,19 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredListings, setFilteredListings] = useState(featuredListings);
   const [showWishlist, setShowWishlist] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
@@ -196,13 +211,17 @@ const Index = () => {
         </div>
       </section>
 
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <ListingReviews />
-        </div>
-      </section>
+      {!user && (
+        <>
+          <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+            <div className="max-w-7xl mx-auto">
+              <ListingReviews />
+            </div>
+          </section>
 
-      <AboutSection />
+          <AboutSection />
+        </>
+      )}
     </div>
   );
 };
