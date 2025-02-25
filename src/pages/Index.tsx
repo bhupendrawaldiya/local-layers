@@ -5,6 +5,7 @@ import { ListingReviews } from "@/components/reviews/ListingReviews";
 import { AboutSection } from "@/components/home/AboutSection";
 import Navbar from "@/components/Navbar";
 import { ListingCard } from "@/types/listings";
+import { Button } from "@/components/ui/button";
 
 const featuredListings: ListingCard[] = [
   {
@@ -107,6 +108,7 @@ const featuredListings: ListingCard[] = [
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredListings, setFilteredListings] = useState(featuredListings);
+  const [showWishlist, setShowWishlist] = useState(false);
 
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
@@ -123,17 +125,31 @@ const Index = () => {
   }, []);
 
   const handleSearch = () => {
-    const filtered = featuredListings.filter((listing) =>
-      listing.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      listing.location.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    let filtered = featuredListings;
+    
+    if (searchTerm) {
+      filtered = featuredListings.filter((listing) =>
+        listing.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        listing.location.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (showWishlist) {
+      const savedWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+      filtered = filtered.filter(listing => savedWishlist.includes(listing.id));
+    }
+
     setFilteredListings(filtered);
   };
+
+  useEffect(() => {
+    handleSearch();
+  }, [showWishlist]);
 
   const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
     if (e.target.value === "") {
-      setFilteredListings(featuredListings);
+      setFilteredListings(showWishlist ? [] : featuredListings);
     }
   };
 
@@ -147,17 +163,28 @@ const Index = () => {
         onSearch={handleSearch}
       />
 
-      <section className="pb-16 px-4">
+      <section className="pb-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-8">
-            {filteredListings.length === 0 
-              ? "No results found" 
-              : searchTerm 
-                ? `Search Results (${filteredListings.length})` 
-                : "Featured Listings"
-            }
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
+              {filteredListings.length === 0 
+                ? "No results found" 
+                : searchTerm 
+                  ? `Search Results (${filteredListings.length})` 
+                  : showWishlist
+                    ? "Your Wishlist"
+                    : "Featured Listings"
+              }
+            </h2>
+            <Button
+              onClick={() => setShowWishlist(!showWishlist)}
+              variant="outline"
+              className="text-sm"
+            >
+              {showWishlist ? "Show All Listings" : "View Wishlist"}
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {filteredListings.map((listing, index) => (
               <ListingCardComponent
                 key={listing.id}
@@ -169,7 +196,7 @@ const Index = () => {
         </div>
       </section>
 
-      <section className="py-16 px-4 bg-gray-50">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <ListingReviews />
         </div>
