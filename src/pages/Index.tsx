@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Hero } from "@/components/home/Hero";
 import { ListingCard as ListingCardComponent } from "@/components/listings/ListingCard";
@@ -112,18 +113,43 @@ const Index = () => {
   const [filteredListings, setFilteredListings] = useState(featuredListings);
   const [showWishlist, setShowWishlist] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [wishlistedIds, setWishlistedIds] = useState<number[]>([]);
 
   useEffect(() => {
+    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchWishlistedItems(session.user.id);
+      }
     });
 
+    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchWishlistedItems(session.user.id);
+      } else {
+        setWishlistedIds([]);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const fetchWishlistedItems = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('wishlists')
+      .select('listing_id')
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error('Error fetching wishlist:', error);
+      return;
+    }
+
+    setWishlistedIds(data.map(item => item.listing_id));
+  };
 
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
@@ -150,8 +176,7 @@ const Index = () => {
     }
 
     if (showWishlist) {
-      const savedWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-      filtered = filtered.filter(listing => savedWishlist.includes(listing.id));
+      filtered = filtered.filter(listing => wishlistedIds.includes(listing.id));
     }
 
     setFilteredListings(filtered);
@@ -159,7 +184,7 @@ const Index = () => {
 
   useEffect(() => {
     handleSearch();
-  }, [showWishlist]);
+  }, [showWishlist, wishlistedIds]);
 
   const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -227,3 +252,4 @@ const Index = () => {
 };
 
 export default Index;
+

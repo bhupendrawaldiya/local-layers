@@ -1,7 +1,9 @@
 
 import { Heart } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ListingCard as ListingCardType } from "@/types/listings";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 interface ListingCardProps {
   listing: ListingCardType;
@@ -9,28 +11,81 @@ interface ListingCardProps {
 }
 
 export const ListingCard = ({ listing, index }: ListingCardProps) => {
-  const [isWishlisted, setIsWishlisted] = useState(() => {
-    const savedWishlist = localStorage.getItem('wishlist');
-    if (savedWishlist) {
-      const wishlist = JSON.parse(savedWishlist);
-      return wishlist.includes(listing.id);
-    }
-    return false;
-  });
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
-  const toggleWishlist = () => {
-    const savedWishlist = localStorage.getItem('wishlist') || '[]';
-    const wishlist = JSON.parse(savedWishlist);
-    
-    if (isWishlisted) {
-      const newWishlist = wishlist.filter((id: number) => id !== listing.id);
-      localStorage.setItem('wishlist', JSON.stringify(newWishlist));
-    } else {
-      wishlist.push(listing.id);
-      localStorage.setItem('wishlist', JSON.stringify(wishlist));
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        checkWishlistStatus(session.user.id);
+      }
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        checkWishlistStatus(session.user.id);
+      } else {
+        setIsWishlisted(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const checkWishlistStatus = async (userId: string) => {
+    const { data, error } = await supabase
+      .from('wishlists')
+      .select()
+      .eq('user_id', userId)
+      .eq('listing_id', listing.id)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error checking wishlist status:', error);
+      return;
     }
-    
-    setIsWishlisted(!isWishlisted);
+
+    setIsWishlisted(!!data);
+  };
+
+  const toggleWishlist = async () => {
+    if (!user) {
+      toast.error("Please sign in to add items to your wishlist");
+      return;
+    }
+
+    try {
+      if (isWishlisted) {
+        const { error } = await supabase
+          .from('wishlists')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('listing_id', listing.id);
+
+        if (error) throw error;
+        
+        setIsWishlisted(false);
+        toast.success("Removed from wishlist");
+      } else {
+        const { error } = await supabase
+          .from('wishlists')
+          .insert([
+            { user_id: user.id, listing_id: listing.id }
+          ]);
+
+        if (error) throw error;
+        
+        setIsWishlisted(true);
+        toast.success("Added to wishlist");
+      }
+    } catch (error) {
+      console.error('Error updating wishlist:', error);
+      toast.error("Failed to update wishlist");
+    }
   };
 
   return (
@@ -71,3 +126,4 @@ export const ListingCard = ({ listing, index }: ListingCardProps) => {
     </div>
   );
 };
+
