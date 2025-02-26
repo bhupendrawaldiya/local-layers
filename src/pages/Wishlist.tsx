@@ -56,7 +56,18 @@ const Wishlist = () => {
         return;
       }
 
-      const listings = wishlistData.map(item => item.listings);
+      // Transform the data to match the ListingCard type
+      const listings: ListingCardType[] = wishlistData
+        .filter(item => item.listings) // Filter out any null listings
+        .map(item => ({
+          id: item.listings.id,
+          title: item.listings.title,
+          price: item.listings.price,
+          image: item.listings.image,
+          location: item.listings.location,
+          created_at: item.listings.created_at
+        }));
+
       setWishlistedItems(listings);
     } catch (error) {
       console.error('Error processing wishlist data:', error);
