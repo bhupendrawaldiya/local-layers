@@ -15,7 +15,6 @@ export const ListingCard = ({ listing, index }: ListingCardProps) => {
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -23,7 +22,6 @@ export const ListingCard = ({ listing, index }: ListingCardProps) => {
       }
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -37,19 +35,23 @@ export const ListingCard = ({ listing, index }: ListingCardProps) => {
   }, []);
 
   const checkWishlistStatus = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('wishlists')
-      .select()
-      .eq('user_id', userId)
-      .eq('listing_id', listing.id)
-      .maybeSingle();
+    try {
+      const { data, error } = await supabase
+        .from('wishlists')
+        .select()
+        .eq('user_id', userId)
+        .eq('listing_id', listing.id)
+        .maybeSingle();
 
-    if (error) {
+      if (error) {
+        console.error('Error checking wishlist status:', error);
+        return;
+      }
+
+      setIsWishlisted(!!data);
+    } catch (error) {
       console.error('Error checking wishlist status:', error);
-      return;
     }
-
-    setIsWishlisted(!!data);
   };
 
   const toggleWishlist = async () => {
@@ -126,4 +128,3 @@ export const ListingCard = ({ listing, index }: ListingCardProps) => {
     </div>
   );
 };
-
