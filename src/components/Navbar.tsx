@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, Heart, User } from "lucide-react";
+import { Menu, X, Heart, User as UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
@@ -43,14 +43,14 @@ const Navbar = () => {
             {user ? (
               <Link to="/account">
                 <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900">
-                  <User className="h-4 w-4 mr-2" />
+                  <UserIcon className="h-4 w-4 mr-2" />
                   Account
                 </Button>
               </Link>
             ) : (
               <Link to="/signin">
                 <Button variant="ghost" size="sm" className="text-gray-600 hover:text-gray-900">
-                  <User className="h-4 w-4 mr-2" />
+                  <UserIcon className="h-4 w-4 mr-2" />
                   Sign In
                 </Button>
               </Link>
@@ -83,14 +83,14 @@ const Navbar = () => {
             {user ? (
               <Link to="/account">
                 <Button variant="ghost" size="sm" className="w-full justify-start text-gray-600 hover:text-gray-900">
-                  <User className="h-4 w-4 mr-2" />
+                  <UserIcon className="h-4 w-4 mr-2" />
                   Account
                 </Button>
               </Link>
             ) : (
               <Link to="/signin">
                 <Button variant="ghost" size="sm" className="w-full justify-start text-gray-600 hover:text-gray-900">
-                  <User className="h-4 w-4 mr-2" />
+                  <UserIcon className="h-4 w-4 mr-2" />
                   Sign In
                 </Button>
               </Link>
@@ -104,3 +104,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+
