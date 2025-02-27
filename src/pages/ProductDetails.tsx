@@ -8,6 +8,7 @@ import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import type { User } from "@supabase/supabase-js";
+import ChatModal from "@/components/chat/ChatModal";
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -16,6 +17,7 @@ const ProductDetails = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   useEffect(() => {
     // Get initial auth session
@@ -126,6 +128,14 @@ const ProductDetails = () => {
     }
   };
 
+  const handleContactSeller = () => {
+    if (!user) {
+      toast.error("Please sign in to contact the seller");
+      return;
+    }
+    setIsChatOpen(true);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -220,7 +230,11 @@ const ProductDetails = () => {
               </div>
               
               <div className="mt-8">
-                <Button className="w-full" size="lg">
+                <Button 
+                  className="w-full" 
+                  size="lg"
+                  onClick={handleContactSeller}
+                >
                   Contact Seller
                 </Button>
               </div>
@@ -249,6 +263,16 @@ const ProductDetails = () => {
           </div>
         )}
       </div>
+      
+      {isChatOpen && user && product && (
+        <ChatModal 
+          isOpen={isChatOpen}
+          onClose={() => setIsChatOpen(false)}
+          listingId={product.id}
+          listingTitle={product.title}
+          userId={user.id}
+        />
+      )}
     </div>
   );
 };
