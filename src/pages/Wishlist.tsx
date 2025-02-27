@@ -39,7 +39,7 @@ const Wishlist = () => {
         .from('wishlists')
         .select(`
           listing_id,
-          listings:listings (
+          listings(
             id,
             title,
             price,
