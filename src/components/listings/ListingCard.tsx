@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { ListingCard as ListingCardType } from "@/types/listings";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 
 interface ListingCardProps {
   listing: ListingCardType;
@@ -109,22 +110,24 @@ export const ListingCard = ({ listing, index }: ListingCardProps) => {
           }`}
         />
       </button>
-      <div className="aspect-w-16 aspect-h-9">
-        <img
-          src={listing.image}
-          alt={listing.title}
-          className="object-cover w-full h-48"
-        />
-      </div>
-      <div className="p-4">
-        <div className="flex items-start justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">{listing.title}</h3>
-            <p className="text-sm text-gray-500">{listing.location}</p>
-          </div>
-          <p className="text-lg font-semibold text-gray-900">${listing.price}</p>
+      <Link to={`/product/${listing.id}`} className="block">
+        <div className="aspect-w-16 aspect-h-9">
+          <img
+            src={listing.image}
+            alt={listing.title}
+            className="object-cover w-full h-48"
+          />
         </div>
-      </div>
+        <div className="p-4">
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">{listing.title}</h3>
+              <p className="text-sm text-gray-500">{listing.location}</p>
+            </div>
+            <p className="text-lg font-semibold text-gray-900">${listing.price}</p>
+          </div>
+        </div>
+      </Link>
     </div>
   );
 };
