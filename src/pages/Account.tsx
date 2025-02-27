@@ -265,12 +265,16 @@ const Account = () => {
                 </div>
                 <Switch 
                   checked={profile.preferences?.notifications || false} 
-                  onCheckedChange={(checked) => 
+                  onCheckedChange={(checked) => {
+                    const currentPrefs = profile.preferences || {};
                     setProfile({
                       ...profile, 
-                      preferences: {...(profile.preferences || {}), notifications: checked}
-                    })
-                  }
+                      preferences: {
+                        ...currentPrefs,
+                        notifications: checked
+                      }
+                    });
+                  }}
                 />
               </div>
               
@@ -281,12 +285,16 @@ const Account = () => {
                 </div>
                 <Switch 
                   checked={profile.preferences?.newsletter || false} 
-                  onCheckedChange={(checked) => 
+                  onCheckedChange={(checked) => {
+                    const currentPrefs = profile.preferences || {};
                     setProfile({
                       ...profile, 
-                      preferences: {...(profile.preferences || {}), newsletter: checked}
-                    })
-                  }
+                      preferences: {
+                        ...currentPrefs,
+                        newsletter: checked
+                      }
+                    });
+                  }}
                 />
               </div>
               
@@ -297,12 +305,16 @@ const Account = () => {
                 </div>
                 <Switch 
                   checked={profile.preferences?.darkMode || false} 
-                  onCheckedChange={(checked) => 
+                  onCheckedChange={(checked) => {
+                    const currentPrefs = profile.preferences || {};
                     setProfile({
                       ...profile, 
-                      preferences: {...(profile.preferences || {}), darkMode: checked}
-                    })
-                  }
+                      preferences: {
+                        ...currentPrefs,
+                        darkMode: checked
+                      }
+                    });
+                  }}
                 />
               </div>
               

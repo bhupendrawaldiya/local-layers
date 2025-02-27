@@ -8,9 +8,9 @@ export interface UserProfile {
   phoneNumber?: string;
   location?: string;
   preferences?: {
-    notifications: boolean;
-    newsletter: boolean;
-    darkMode: boolean;
+    notifications?: boolean;
+    newsletter?: boolean;
+    darkMode?: boolean;
   };
   created_at: string;
 }
