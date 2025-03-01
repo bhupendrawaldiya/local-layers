@@ -13,6 +13,7 @@ export interface ListingCard {
   price: number;
   image: string;
   location: string;
+  description?: string;
   reviews?: Review[];
   created_at?: string;
 }
