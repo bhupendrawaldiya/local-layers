@@ -47,6 +47,7 @@ export type Database = {
       listings: {
         Row: {
           created_at: string
+          description: string | null
           id: number
           image: string
           location: string
@@ -55,6 +56,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          description?: string | null
           id?: number
           image: string
           location: string
@@ -63,6 +65,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          description?: string | null
           id?: number
           image?: string
           location?: string
