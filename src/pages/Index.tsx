@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Hero } from "@/components/home/Hero";
 import { ListingCard as ListingCardComponent } from "@/components/listings/ListingCard";
 import { ListingReviews } from "@/components/reviews/ListingReviews";
@@ -9,113 +9,46 @@ import { ListingCard } from "@/types/listings";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
-
-const featuredListings: ListingCard[] = [
-  {
-    id: 1,
-    title: "Vintage Leather Chair",
-    price: 299,
-    image: "https://images.unsplash.com/photo-1519947486511-46149fa0a254?auto=format&fit=crop&q=80",
-    location: "Downtown",
-    reviews: [
-      {
-        id: 1,
-        authorName: "John D.",
-        rating: 5,
-        comment: "Beautiful chair, exactly as described!",
-        date: "2024-03-15"
-      },
-      {
-        id: 2,
-        authorName: "Sarah M.",
-        rating: 4,
-        comment: "Great quality, but shipping took longer than expected",
-        date: "2024-03-10"
-      }
-    ]
-  },
-  {
-    id: 2,
-    title: "Handcrafted Coffee Table",
-    price: 199,
-    image: "https://images.unsplash.com/photo-1532372320978-9a4bf69426c9?auto=format&fit=crop&q=80",
-    location: "Westside",
-    reviews: [
-      {
-        id: 3,
-        authorName: "Mike R.",
-        rating: 5,
-        comment: "Stunning craftsmanship!",
-        date: "2024-03-12"
-      }
-    ]
-  },
-  {
-    id: 3,
-    title: "Modern Floor Lamp",
-    price: 149,
-    image: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&q=80",
-    location: "Eastside",
-    reviews: []
-  },
-  {
-    id: 4,
-    title: "Antique Wooden Desk",
-    price: 450,
-    image: "https://images.unsplash.com/photo-1518733057094-95b53143d2a7?auto=format&fit=crop&q=80",
-    location: "North End",
-    reviews: []
-  },
-  {
-    id: 5,
-    title: "Mid-Century Dining Set",
-    price: 899,
-    image: "https://images.unsplash.com/photo-1615529162924-f8605388461d?auto=format&fit=crop&q=80",
-    location: "South Side",
-    reviews: []
-  },
-  {
-    id: 6,
-    title: "Vintage Record Player",
-    price: 275,
-    image: "https://images.unsplash.com/photo-1542456885-89667376a074?auto=format&fit=crop&q=80",
-    location: "Downtown",
-    reviews: []
-  },
-  {
-    id: 7,
-    title: "Artisan Ceramic Vase",
-    price: 89,
-    image: "https://images.unsplash.com/photo-1578500351865-d6c3706f46bc?auto=format&fit=crop&q=80",
-    location: "Arts District",
-    reviews: []
-  },
-  {
-    id: 8,
-    title: "Boho Wall Tapestry",
-    price: 65,
-    image: "https://images.unsplash.com/photo-1617142108319-66c7ab45c711?auto=format&fit=crop&q=80",
-    location: "Cultural Center",
-    reviews: []
-  },
-  {
-    id: 9,
-    title: "Industrial Bar Stools",
-    price: 175,
-    image: "https://images.unsplash.com/photo-1631891337014-c45549f28587?auto=format&fit=crop&q=80",
-    location: "Warehouse District",
-    reviews: []
-  }
-];
+import { CreateListingForm } from "@/components/listings/CreateListingForm";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { PlusCircle } from "lucide-react";
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredListings, setFilteredListings] = useState(featuredListings);
+  const [filteredListings, setFilteredListings] = useState<ListingCard[]>([]);
+  const [allListings, setAllListings] = useState<ListingCard[]>([]);
   const [showWishlist, setShowWishlist] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [wishlistedIds, setWishlistedIds] = useState<number[]>([]);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  const channelRef = useRef<any>(null);
+
+  // Fetch all listings from Supabase
+  const fetchListings = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('listings')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      if (data) {
+        setAllListings(data as ListingCard[]);
+      }
+    } catch (error) {
+      console.error('Error fetching listings:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
+    fetchListings();
+    
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
@@ -134,7 +67,31 @@ const Index = () => {
       }
     });
 
-    return () => subscription.unsubscribe();
+    // Set up real-time subscription for listings
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen for all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'listings'
+        },
+        (payload) => {
+          console.log('Real-time update received:', payload);
+          fetchListings(); // Refresh listings when changes occur
+        }
+      )
+      .subscribe();
+    
+    channelRef.current = channel;
+
+    return () => {
+      subscription.unsubscribe();
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+      }
+    };
   }, []);
 
   const fetchWishlistedItems = async (userId: string) => {
@@ -165,11 +122,15 @@ const Index = () => {
     return () => observer.disconnect();
   }, []);
 
+  useEffect(() => {
+    handleSearch();
+  }, [showWishlist, wishlistedIds, allListings]);
+
   const handleSearch = () => {
-    let filtered = featuredListings;
+    let filtered = allListings;
     
     if (searchTerm) {
-      filtered = featuredListings.filter((listing) =>
+      filtered = allListings.filter((listing) =>
         listing.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         listing.location.toLowerCase().includes(searchTerm.toLowerCase())
       );
@@ -182,15 +143,18 @@ const Index = () => {
     setFilteredListings(filtered);
   };
 
-  useEffect(() => {
-    handleSearch();
-  }, [showWishlist, wishlistedIds]);
-
   const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
     if (e.target.value === "") {
-      setFilteredListings(showWishlist ? [] : featuredListings);
+      setFilteredListings(showWishlist ? allListings.filter(listing => wishlistedIds.includes(listing.id)) : allListings);
+    } else {
+      handleSearch();
     }
+  };
+
+  const handleCreateSuccess = () => {
+    setIsCreateDialogOpen(false);
+    fetchListings();
   };
 
   return (
@@ -208,7 +172,7 @@ const Index = () => {
           <div className="flex justify-between items-center mb-8">
             <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
               {filteredListings.length === 0 
-                ? "No results found" 
+                ? isLoading ? "Loading listings..." : "No results found" 
                 : searchTerm 
                   ? `Search Results (${filteredListings.length})` 
                   : showWishlist
@@ -216,22 +180,52 @@ const Index = () => {
                     : "Featured Listings"
               }
             </h2>
-            <Button
-              onClick={() => setShowWishlist(!showWishlist)}
-              variant="outline"
-              className="text-sm"
-            >
-              {showWishlist ? "Show All Listings" : "View Wishlist"}
-            </Button>
+            <div className="flex gap-2">
+              {user && (
+                <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="flex items-center gap-1">
+                      <PlusCircle className="h-4 w-4" />
+                      <span>Create Listing</span>
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[500px]">
+                    <CreateListingForm onSuccess={handleCreateSuccess} />
+                  </DialogContent>
+                </Dialog>
+              )}
+              <Button
+                onClick={() => setShowWishlist(!showWishlist)}
+                variant="outline"
+                className="text-sm"
+              >
+                {showWishlist ? "Show All Listings" : "View Wishlist"}
+              </Button>
+            </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-            {filteredListings.map((listing, index) => (
-              <ListingCardComponent
-                key={listing.id}
-                listing={listing}
-                index={index}
-              />
-            ))}
+            {isLoading ? (
+              // Loading skeleton placeholders
+              Array(8).fill(0).map((_, index) => (
+                <div key={index} className="bg-white rounded-xl overflow-hidden shadow-sm p-4 h-[300px]">
+                  <div className="animate-pulse">
+                    <div className="bg-gray-200 h-48 w-full rounded"></div>
+                    <div className="mt-4 space-y-2">
+                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                      <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              filteredListings.map((listing, index) => (
+                <ListingCardComponent
+                  key={listing.id}
+                  listing={listing}
+                  index={index}
+                />
+              ))
+            )}
           </div>
         </div>
       </section>
@@ -252,4 +246,3 @@ const Index = () => {
 };
 
 export default Index;
-
