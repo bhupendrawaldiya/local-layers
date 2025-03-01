@@ -18,10 +18,12 @@ interface ChatModalProps {
   listingId: number;
   listingTitle: string;
   userId: string;
+  onMessageSent?: () => void;
+  chatId?: string; // Optional, if opening an existing chat
 }
 
-const ChatModal = ({ isOpen, onClose, listingId, listingTitle, userId }: ChatModalProps) => {
-  const [chatId, setChatId] = useState<string | null>(null);
+const ChatModal = ({ isOpen, onClose, listingId, listingTitle, userId, onMessageSent, chatId: existingChatId }: ChatModalProps) => {
+  const [chatId, setChatId] = useState<string | null>(existingChatId || null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -31,6 +33,12 @@ const ChatModal = ({ isOpen, onClose, listingId, listingTitle, userId }: ChatMod
     if (!isOpen || !userId) return;
     
     const initializeChat = async () => {
+      if (existingChatId) {
+        setChatId(existingChatId);
+        setIsLoading(false);
+        return;
+      }
+      
       setIsLoading(true);
       try {
         // Get seller ID for this listing
@@ -77,7 +85,7 @@ const ChatModal = ({ isOpen, onClose, listingId, listingTitle, userId }: ChatMod
     };
     
     initializeChat();
-  }, [isOpen, userId, listingId]);
+  }, [isOpen, userId, listingId, existingChatId]);
   
   useEffect(() => {
     if (!chatId) return;
@@ -142,7 +150,18 @@ const ChatModal = ({ isOpen, onClose, listingId, listingTitle, userId }: ChatMod
       
       if (error) throw error;
       
+      // Update the chat's updated_at timestamp
+      await supabase
+        .from('chats')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', chatId);
+      
       setNewMessage("");
+      
+      // Notify parent component that a message was sent
+      if (onMessageSent) {
+        onMessageSent();
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Failed to send message');

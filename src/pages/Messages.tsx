@@ -38,6 +38,28 @@ const Messages = () => {
       }
       setUser(session.user);
       fetchChats(session.user.id);
+
+      // Subscribe to updates in the chats table
+      const channel = supabase
+        .channel('schema-db-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*', // Listen for all events (INSERT, UPDATE, DELETE)
+            schema: 'public',
+            table: 'chats',
+            filter: `buyer_id=eq.${session.user.id},seller_id=eq.${session.user.id}`
+          },
+          (payload) => {
+            // Refresh the chats list when there's a change
+            fetchChats(session.user.id);
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     };
 
     checkAuth();
@@ -86,6 +108,13 @@ const Messages = () => {
 
   const handleChatSelect = (chat: Chat) => {
     setSelectedChat(chat);
+  };
+
+  // Function to handle chat refresh after sending a message
+  const handleChatUpdate = () => {
+    if (user) {
+      fetchChats(user.id);
+    }
   };
 
   return (
@@ -151,6 +180,8 @@ const Messages = () => {
           listingId={selectedChat.listing_id}
           listingTitle={selectedChat.listing.title}
           userId={user.id}
+          onMessageSent={handleChatUpdate}
+          chatId={selectedChat.id}
         />
       )}
     </div>
