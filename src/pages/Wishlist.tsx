@@ -57,6 +57,7 @@ const Wishlist = () => {
       }
 
       // Transform the data correctly from the nested structure
+      // Fix: properly type and access the nested listings object
       const listings: ListingCardType[] = wishlistData
         .filter(item => item.listings) // Filter out any null listings
         .map(item => ({
