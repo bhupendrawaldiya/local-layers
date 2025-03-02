@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -98,6 +99,7 @@ const Account = () => {
         return;
       }
 
+      // Transform the data correctly from the nested structure
       const listings: ListingCardType[] = wishlistData
         .filter(item => item.listings) // Filter out any null listings
         .map(item => ({
