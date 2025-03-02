@@ -57,16 +57,16 @@ const Wishlist = () => {
       }
 
       // Transform the data correctly from the nested structure
-      // Fix: properly type and access the nested listings object
+      // Filter out any null listings and properly extract the nested listings data
       const listings: ListingCardType[] = wishlistData
         .filter(item => item.listings) // Filter out any null listings
         .map(item => ({
-          id: item.listings.id,
-          title: item.listings.title,
-          price: item.listings.price,
-          image: item.listings.image,
-          location: item.listings.location,
-          created_at: item.listings.created_at
+          id: item.listings?.id,
+          title: item.listings?.title,
+          price: item.listings?.price,
+          image: item.listings?.image,
+          location: item.listings?.location,
+          created_at: item.listings?.created_at
         }));
 
       setWishlistedItems(listings);
