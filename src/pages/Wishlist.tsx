@@ -56,19 +56,24 @@ const Wishlist = () => {
         return;
       }
 
-      // Transform the data correctly from the nested structure
-      // Filter out any null listings and properly extract the nested listings data
+      console.log('Wishlist data:', wishlistData);
+
+      // Transform the data correctly
       const listings: ListingCardType[] = wishlistData
         .filter(item => item.listings) // Filter out any null listings
-        .map(item => ({
-          id: item.listings?.id,
-          title: item.listings?.title,
-          price: item.listings?.price,
-          image: item.listings?.image,
-          location: item.listings?.location,
-          created_at: item.listings?.created_at
-        }));
+        .map(item => {
+          // Each item has a nested 'listings' object containing listing details
+          return {
+            id: item.listings.id,
+            title: item.listings.title,
+            price: item.listings.price,
+            image: item.listings.image,
+            location: item.listings.location,
+            created_at: item.listings.created_at
+          };
+        });
 
+      console.log('Transformed listings:', listings);
       setWishlistedItems(listings);
     } catch (error) {
       console.error('Error processing wishlist data:', error);
