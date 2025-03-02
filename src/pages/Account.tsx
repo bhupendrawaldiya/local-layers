@@ -32,7 +32,6 @@ const Account = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
         navigate("/signin");
@@ -43,7 +42,6 @@ const Account = () => {
       fetchWishlistedItems(session.user.id);
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT") {
         navigate("/signin");
@@ -63,8 +61,6 @@ const Account = () => {
   const fetchUserProfile = async (userId: string) => {
     setIsLoading(true);
     try {
-      // For now, we'll just use the user data from auth
-      // In a real app, you would fetch from a profiles table
       setProfile(prev => ({
         ...prev,
         id: userId,
@@ -102,7 +98,6 @@ const Account = () => {
         return;
       }
 
-      // Transform the data to match the ListingCard type
       const listings: ListingCardType[] = wishlistData
         .filter(item => item.listings) // Filter out any null listings
         .map(item => ({
@@ -126,8 +121,6 @@ const Account = () => {
     
     setIsSaving(true);
     try {
-      // In a real app, you would save to a profiles table
-      // For now, we'll just show a success message
       toast.success("Profile updated successfully");
     } catch (error) {
       console.error("Error saving profile:", error);
