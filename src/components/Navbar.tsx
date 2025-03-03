@@ -1,26 +1,25 @@
 
 import { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, Heart, ShoppingBag, User, MessageSquare } from "lucide-react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
-import type { User as SupabaseUser } from "@supabase/supabase-js";
+import { Home, Heart, MessageSquare, PackageSearch, UserCircle, LogOut } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const Navbar = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState<SupabaseUser | null>(null);
-  const location = useLocation();
+  const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    // Get initial auth session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
     });
 
@@ -28,174 +27,163 @@ const Navbar = () => {
   }, []);
 
   const handleSignOut = async () => {
-    try {
-      await supabase.auth.signOut();
-      toast.success("Signed out successfully");
-      navigate("/");
-    } catch (error) {
-      toast.error("Error signing out");
-    }
+    await supabase.auth.signOut();
+    navigate("/");
   };
 
-  const closeMenu = () => {
-    setIsMenuOpen(false);
+  const NavLink = ({
+    to,
+    icon: Icon,
+    label,
+    isMobile = false,
+  }: {
+    to: string;
+    icon: React.ElementType;
+    label: string;
+    isMobile?: boolean;
+  }) => {
+    const isActive = location.pathname === to;
+    
+    return (
+      <Link
+        to={to}
+        className={cn(
+          "flex items-center gap-2 px-3 py-2 rounded-md transition-colors",
+          isActive
+            ? "bg-primary/10 text-primary"
+            : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
+          isMobile && "w-full"
+        )}
+        onClick={() => isMobile && setIsOpen(false)}
+      >
+        <Icon className="h-5 w-5" />
+        <span>{label}</span>
+      </Link>
+    );
   };
-
-  const navLinks = [
-    { name: "Wishlist", href: "/wishlist", icon: <Heart className="h-5 w-5" /> },
-    { name: "Messages", href: "/messages", icon: <MessageSquare className="h-5 w-5" /> },
-    { name: "Cart", href: "#", icon: <ShoppingBag className="h-5 w-5" /> },
-  ];
 
   return (
-    <nav className="fixed w-full bg-white shadow-sm z-10">
+    <nav className="fixed w-full bg-white/80 backdrop-blur-md shadow-sm z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          <div className="flex">
-            <Link to="/" className="flex-shrink-0 flex items-center">
-              <span className="font-bold text-xl text-blue-600">LocalFinds</span>
+          <div className="flex items-center">
+            <Link to="/" className="flex items-center">
+              <img src="/favicon.ico" alt="Logo" className="h-8 w-8 mr-2" />
+              <span className="text-xl font-bold text-gray-900">Marketplace</span>
             </Link>
           </div>
 
-          {/* Desktop nav */}
-          <div className="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-4">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                to={link.href}
-                className={`px-3 py-2 text-sm font-medium rounded-md flex items-center space-x-1 ${
-                  location.pathname === link.href
-                    ? "text-blue-600"
-                    : "text-gray-600 hover:text-blue-600"
-                }`}
-              >
-                {link.icon}
-                <span>{link.name}</span>
-              </Link>
-            ))}
-
-            {user ? (
-              <div className="flex items-center space-x-4">
-                <Link
-                  to="/account"
-                  className={`px-3 py-2 text-sm font-medium rounded-md flex items-center space-x-1 ${
-                    location.pathname === "/account"
-                      ? "text-blue-600"
-                      : "text-gray-600 hover:text-blue-600"
-                  }`}
-                >
-                  <User className="h-5 w-5" />
-                  <span>Account</span>
-                </Link>
+          {/* Desktop navigation */}
+          <div className="hidden md:flex items-center space-x-1">
+            <NavLink to="/" icon={Home} label="Home" />
+            <NavLink to="/products" icon={PackageSearch} label="Products" />
+            {user && (
+              <>
+                <NavLink to="/wishlist" icon={Heart} label="Wishlist" />
+                <NavLink to="/messages" icon={MessageSquare} label="Messages" />
+                <NavLink to="/account" icon={UserCircle} label="Account" />
                 <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={handleSignOut}
-                  variant="outline"
-                  className="border-gray-300"
+                  className="ml-2 text-red-500 hover:text-red-600 hover:bg-red-50"
                 >
+                  <LogOut className="h-5 w-5 mr-2" />
                   Sign Out
                 </Button>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-4">
+              </>
+            )}
+            {!user && (
+              <>
                 <Link to="/signin">
-                  <Button variant="outline" className="border-gray-300">
+                  <Button variant="ghost" size="sm">
                     Sign In
                   </Button>
                 </Link>
                 <Link to="/signup">
-                  <Button>Sign Up</Button>
+                  <Button size="sm">Sign Up</Button>
                 </Link>
-              </div>
+              </>
             )}
           </div>
 
           {/* Mobile menu button */}
-          <div className="flex items-center sm:hidden">
+          <div className="md:hidden flex items-center">
             <button
-              type="button"
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none"
-              aria-controls="mobile-menu"
-              aria-expanded="false"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              onClick={() => setIsOpen(!isOpen)}
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
             >
               <span className="sr-only">Open main menu</span>
-              {isMenuOpen ? (
-                <X className="block h-6 w-6" aria-hidden="true" />
-              ) : (
-                <Menu className="block h-6 w-6" aria-hidden="true" />
-              )}
+              <svg
+                className={`${isOpen ? "hidden" : "block"} h-6 w-6`}
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+              <svg
+                className={`${isOpen ? "block" : "hidden"} h-6 w-6`}
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
             </button>
           </div>
         </div>
       </div>
 
       {/* Mobile menu */}
-      {isMenuOpen && (
-        <div className="sm:hidden" id="mobile-menu">
-          <div className="pt-2 pb-4 space-y-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                to={link.href}
-                className={`flex items-center px-4 py-2 text-base font-medium ${
-                  location.pathname === link.href
-                    ? "text-blue-600 bg-blue-50"
-                    : "text-gray-700 hover:bg-gray-50"
-                }`}
-                onClick={closeMenu}
+      <div className={`${isOpen ? "block" : "hidden"} md:hidden bg-white shadow-md`}>
+        <div className="pt-2 pb-3 space-y-1 px-4">
+          <NavLink to="/" icon={Home} label="Home" isMobile />
+          <NavLink to="/products" icon={PackageSearch} label="Products" isMobile />
+          {user && (
+            <>
+              <NavLink to="/wishlist" icon={Heart} label="Wishlist" isMobile />
+              <NavLink to="/messages" icon={MessageSquare} label="Messages" isMobile />
+              <NavLink to="/account" icon={UserCircle} label="Account" isMobile />
+              <button
+                onClick={handleSignOut}
+                className="flex items-center gap-2 px-3 py-2 w-full text-left rounded-md transition-colors text-red-500 hover:bg-red-50"
               >
-                {link.icon}
-                <span className="ml-3">{link.name}</span>
+                <LogOut className="h-5 w-5" />
+                <span>Sign Out</span>
+              </button>
+            </>
+          )}
+          {!user && (
+            <div className="flex flex-col space-y-2 pt-2">
+              <Link to="/signin" className="w-full">
+                <Button variant="outline" className="w-full">
+                  Sign In
+                </Button>
               </Link>
-            ))}
-
-            {user ? (
-              <>
-                <Link
-                  to="/account"
-                  className={`flex items-center px-4 py-2 text-base font-medium ${
-                    location.pathname === "/account"
-                      ? "text-blue-600 bg-blue-50"
-                      : "text-gray-700 hover:bg-gray-50"
-                  }`}
-                  onClick={closeMenu}
-                >
-                  <User className="h-5 w-5" />
-                  <span className="ml-3">Account</span>
-                </Link>
-                <button
-                  className="flex w-full items-center px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50"
-                  onClick={() => {
-                    handleSignOut();
-                    closeMenu();
-                  }}
-                >
-                  <span className="ml-8">Sign Out</span>
-                </button>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/signin"
-                  className="flex items-center px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50"
-                  onClick={closeMenu}
-                >
-                  <span className="ml-8">Sign In</span>
-                </Link>
-                <Link
-                  to="/signup"
-                  className="flex items-center px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50"
-                  onClick={closeMenu}
-                >
-                  <span className="ml-8">Sign Up</span>
-                </Link>
-              </>
-            )}
-          </div>
+              <Link to="/signup" className="w-full">
+                <Button className="w-full">Sign Up</Button>
+              </Link>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </nav>
   );
-};
+}
 
 export default Navbar;
