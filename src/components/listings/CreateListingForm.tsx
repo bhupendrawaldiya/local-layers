@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Image, Loader2 } from "lucide-react";
+import { DialogTitle } from "@/components/ui/dialog";
 
 export function CreateListingForm({ onSuccess }: { onSuccess?: () => void }) {
   const [title, setTitle] = useState("");
@@ -45,6 +46,7 @@ export function CreateListingForm({ onSuccess }: { onSuccess?: () => void }) {
         .upload(filePath, file);
       
       if (uploadError) {
+        console.error("Upload error:", uploadError);
         throw uploadError;
       }
       
@@ -78,13 +80,16 @@ export function CreateListingForm({ onSuccess }: { onSuccess?: () => void }) {
     setIsSubmitting(true);
 
     try {
+      console.log("Starting image upload...");
       // Upload image first
       const imageUrl = await uploadImage();
+      console.log("Image upload complete, URL:", imageUrl);
       
       if (!imageUrl) {
         throw new Error("Failed to upload image");
       }
 
+      console.log("Inserting listing data to database...");
       // Then create the listing with the image URL
       const { error } = await supabase
         .from('listings')
@@ -98,8 +103,12 @@ export function CreateListingForm({ onSuccess }: { onSuccess?: () => void }) {
           }
         ]);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Database error:", error);
+        throw error;
+      }
       
+      console.log("Listing created successfully");
       toast.success("Listing created successfully!");
       
       // Reset form
@@ -130,7 +139,7 @@ export function CreateListingForm({ onSuccess }: { onSuccess?: () => void }) {
 
   return (
     <div className="bg-white p-6 rounded-lg shadow">
-      <h2 className="text-xl font-semibold mb-4">Create New Listing</h2>
+      <DialogTitle className="text-xl font-semibold mb-4">Create New Listing</DialogTitle>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
