@@ -24,7 +24,17 @@ export const WishlistTab = () => {
         // Get wishlisted items for the current user
         const { data: wishlistData, error: wishlistError } = await supabase
           .from('wishlists')
-          .select('listing_id')
+          .select(`
+            listing_id,
+            listings(
+              id,
+              title,
+              price,
+              image,
+              location,
+              created_at
+            )
+          `)
           .eq('user_id', session.user.id);
 
         if (wishlistError) {
@@ -39,22 +49,22 @@ export const WishlistTab = () => {
           return;
         }
 
-        // Extract listing IDs
-        const listingIds = wishlistData.map(item => item.listing_id);
+        // Transform the data correctly
+        const listings: ListingCardType[] = wishlistData
+          .filter(item => item.listings) // Filter out any null listings
+          .map(item => {
+            const listing = item.listings as any; // Type assertion to handle the nested structure
+            return {
+              id: listing.id,
+              title: listing.title,
+              price: listing.price,
+              image: listing.image,
+              location: listing.location,
+              created_at: listing.created_at
+            };
+          });
 
-        // Fetch the actual listings
-        const { data: listingsData, error: listingsError } = await supabase
-          .from('listings')
-          .select('*')
-          .in('id', listingIds);
-
-        if (listingsError) {
-          console.error('Error fetching listings:', listingsError);
-          setIsLoading(false);
-          return;
-        }
-
-        setWishlistedItems(listingsData as ListingCardType[]);
+        setWishlistedItems(listings);
       } catch (error) {
         console.error('Error in fetching wishlisted items:', error);
       } finally {

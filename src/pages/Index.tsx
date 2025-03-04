@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useRef } from "react";
 import { Hero } from "@/components/home/Hero";
 import { ListingCard as ListingCardComponent } from "@/components/listings/ListingCard";
@@ -25,7 +24,6 @@ const Index = () => {
   
   const channelRef = useRef<any>(null);
 
-  // Fetch all listings from Supabase
   const fetchListings = async () => {
     setIsLoading(true);
     try {
@@ -49,7 +47,6 @@ const Index = () => {
   useEffect(() => {
     fetchListings();
     
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -57,7 +54,6 @@ const Index = () => {
       }
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -67,19 +63,18 @@ const Index = () => {
       }
     });
 
-    // Set up real-time subscription for listings
     const channel = supabase
       .channel('schema-db-changes')
       .on(
         'postgres_changes',
         {
-          event: '*', // Listen for all events (INSERT, UPDATE, DELETE)
+          event: '*',
           schema: 'public',
           table: 'listings'
         },
         (payload) => {
           console.log('Real-time update received:', payload);
-          fetchListings(); // Refresh listings when changes occur
+          fetchListings();
         }
       )
       .subscribe();
@@ -205,7 +200,6 @@ const Index = () => {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
             {isLoading ? (
-              // Loading skeleton placeholders
               Array(8).fill(0).map((_, index) => (
                 <div key={index} className="bg-white rounded-xl overflow-hidden shadow-sm p-4 h-[300px]">
                   <div className="animate-pulse">

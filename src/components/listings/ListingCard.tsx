@@ -1,12 +1,12 @@
 
-import { Heart } from "lucide-react";
 import { useState, useEffect } from "react";
-import { ListingCard as ListingCardType } from "@/types/listings";
+import { Link } from "react-router-dom";
+import { Heart } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import { Link } from "react-router-dom";
+import { ListingCard as ListingCardType } from "@/types/listings";
 
-interface ListingCardProps {
+export interface ListingCardProps {
   listing: ListingCardType;
   index: number;
 }
@@ -16,32 +16,34 @@ export const ListingCard = ({ listing, index }: ListingCardProps) => {
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
+    // Get current user
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        checkWishlistStatus(session.user.id);
+        checkWishlistStatus(session.user.id, listing.id);
       }
     });
 
+    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        checkWishlistStatus(session.user.id);
+        checkWishlistStatus(session.user.id, listing.id);
       } else {
         setIsWishlisted(false);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [listing.id]);
 
-  const checkWishlistStatus = async (userId: string) => {
+  const checkWishlistStatus = async (userId: string, listingId: number) => {
     try {
       const { data, error } = await supabase
         .from('wishlists')
         .select()
         .eq('user_id', userId)
-        .eq('listing_id', listing.id)
+        .eq('listing_id', listingId)
         .maybeSingle();
 
       if (error) {
@@ -55,7 +57,10 @@ export const ListingCard = ({ listing, index }: ListingCardProps) => {
     }
   };
 
-  const toggleWishlist = async () => {
+  const toggleWishlist = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (!user) {
       toast.error("Please sign in to add items to your wishlist");
       return;
@@ -63,6 +68,7 @@ export const ListingCard = ({ listing, index }: ListingCardProps) => {
 
     try {
       if (isWishlisted) {
+        // Remove from wishlist
         const { error } = await supabase
           .from('wishlists')
           .delete()
@@ -74,6 +80,7 @@ export const ListingCard = ({ listing, index }: ListingCardProps) => {
         setIsWishlisted(false);
         toast.success("Removed from wishlist");
       } else {
+        // Add to wishlist
         const { error } = await supabase
           .from('wishlists')
           .insert([
@@ -92,42 +99,49 @@ export const ListingCard = ({ listing, index }: ListingCardProps) => {
   };
 
   return (
-    <div
-      className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 fade-in opacity-0 translate-y-4 relative hover:scale-up"
-      style={{ animationDelay: `${index * 150}ms` }}
+    <Link
+      to={`/product/${listing.id}`}
+      className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow relative group"
     >
-      <button
-        onClick={(e) => {
-          e.preventDefault();
-          toggleWishlist();
-        }}
-        className="absolute top-4 right-4 z-10 bg-white/80 backdrop-blur-sm p-2 rounded-full 
-                 shadow-sm hover:shadow-md transition-all duration-200"
-      >
-        <Heart
-          className={`h-5 w-5 transition-colors ${
-            isWishlisted ? "fill-red-500 stroke-red-500" : "stroke-gray-600"
-          }`}
-        />
-      </button>
-      <Link to={`/product/${listing.id}`} className="block">
-        <div className="aspect-w-16 aspect-h-9">
+      <div className="relative">
+        {/* Image */}
+        <div className="aspect-video bg-gray-200">
           <img
-            src={listing.image}
+            src={listing.image || "/placeholder.svg"}
             alt={listing.title}
-            className="object-cover w-full h-48"
+            className="w-full h-full object-cover"
           />
         </div>
-        <div className="p-4">
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 line-clamp-1">{listing.title}</h3>
-              <p className="text-sm text-gray-500">{listing.location}</p>
-            </div>
-            <p className="text-lg font-semibold text-gray-900">${listing.price}</p>
-          </div>
+        
+        {/* Wishlist button */}
+        <button 
+          className="absolute top-2 right-2 p-1.5 bg-white/80 backdrop-blur-sm rounded-full z-10 transition-all hover:bg-white"
+          onClick={toggleWishlist}
+        >
+          <Heart
+            className={`h-5 w-5 transition-colors ${
+              isWishlisted ? "fill-red-500 stroke-red-500" : "stroke-gray-600"
+            }`}
+          />
+        </button>
+      </div>
+      
+      <div className="p-4">
+        <div className="flex justify-between items-start">
+          <h3 className="text-lg font-medium text-gray-900 line-clamp-1">
+            {listing.title}
+          </h3>
         </div>
-      </Link>
-    </div>
+        <p className="mt-1 text-sm text-gray-500">{listing.location}</p>
+        <div className="mt-3 flex justify-between items-center">
+          <p className="text-lg font-semibold text-gray-900">${listing.price.toLocaleString()}</p>
+          <p className="text-xs text-gray-500">
+            {listing.created_at
+              ? new Date(listing.created_at).toLocaleDateString()
+              : ""}
+          </p>
+        </div>
+      </div>
+    </Link>
   );
 };
