@@ -19,6 +19,7 @@ export const AccountLayout: React.FC<AccountLayoutProps> = ({ handleSignOut }) =
           <TabsTrigger value="my-listings">My Listings</TabsTrigger>
           <TabsTrigger value="wishlist">Wishlist</TabsTrigger>
           <TabsTrigger value="preferences">Preferences</TabsTrigger>
+          <TabsTrigger value="messages" onClick={() => window.location.href = "/messages"}>Messages</TabsTrigger>
         </TabsList>
         
         <TabsContent value="profile">
