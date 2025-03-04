@@ -16,4 +16,6 @@ export interface ListingCard {
   description?: string;
   reviews?: Review[];
   created_at?: string;
+  seller_id?: string;
+  is_visible?: boolean;
 }

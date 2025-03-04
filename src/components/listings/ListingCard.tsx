@@ -14,23 +14,41 @@ export interface ListingCardProps {
 export const ListingCard = ({ listing, index }: ListingCardProps) => {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [isOwnListing, setIsOwnListing] = useState(false);
 
   useEffect(() => {
     // Get current user
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        checkWishlistStatus(session.user.id, listing.id);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+      
+      if (currentUser) {
+        // Check if the listing belongs to the current user
+        setIsOwnListing(currentUser.id === (listing as any).seller_id);
+        
+        // Only check wishlist status for listings that don't belong to the user
+        if (!isOwnListing) {
+          checkWishlistStatus(currentUser.id, listing.id);
+        }
       }
     });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        checkWishlistStatus(session.user.id, listing.id);
+      const currentUser = session?.user ?? null;
+      setUser(currentUser);
+      
+      if (currentUser) {
+        // Check if the listing belongs to the current user
+        setIsOwnListing(currentUser.id === (listing as any).seller_id);
+        
+        // Only check wishlist status for listings that don't belong to the user
+        if (!isOwnListing) {
+          checkWishlistStatus(currentUser.id, listing.id);
+        }
       } else {
         setIsWishlisted(false);
+        setIsOwnListing(false);
       }
     });
 
@@ -113,17 +131,26 @@ export const ListingCard = ({ listing, index }: ListingCardProps) => {
           />
         </div>
         
-        {/* Wishlist button */}
-        <button 
-          className="absolute top-2 right-2 p-1.5 bg-white/80 backdrop-blur-sm rounded-full z-10 transition-all hover:bg-white"
-          onClick={toggleWishlist}
-        >
-          <Heart
-            className={`h-5 w-5 transition-colors ${
-              isWishlisted ? "fill-red-500 stroke-red-500" : "stroke-gray-600"
-            }`}
-          />
-        </button>
+        {/* Wishlist button - only show for listings that don't belong to the user */}
+        {!isOwnListing && user && (
+          <button 
+            className="absolute top-2 right-2 p-1.5 bg-white/80 backdrop-blur-sm rounded-full z-10 transition-all hover:bg-white"
+            onClick={toggleWishlist}
+          >
+            <Heart
+              className={`h-5 w-5 transition-colors ${
+                isWishlisted ? "fill-red-500 stroke-red-500" : "stroke-gray-600"
+              }`}
+            />
+          </button>
+        )}
+
+        {/* Owner badge */}
+        {isOwnListing && (
+          <div className="absolute top-2 right-2 px-2 py-1 bg-blue-500 text-white text-xs font-medium rounded-full z-10">
+            Your Listing
+          </div>
+        )}
       </div>
       
       <div className="p-4">

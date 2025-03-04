@@ -50,8 +50,10 @@ export type Database = {
           description: string | null
           id: number
           image: string
+          is_visible: boolean
           location: string
           price: number
+          seller_id: string | null
           title: string
         }
         Insert: {
@@ -59,8 +61,10 @@ export type Database = {
           description?: string | null
           id?: number
           image: string
+          is_visible?: boolean
           location: string
           price: number
+          seller_id?: string | null
           title: string
         }
         Update: {
@@ -68,8 +72,10 @@ export type Database = {
           description?: string | null
           id?: number
           image?: string
+          is_visible?: boolean
           location?: string
           price?: number
+          seller_id?: string | null
           title?: string
         }
         Relationships: []

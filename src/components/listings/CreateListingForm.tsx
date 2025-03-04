@@ -89,8 +89,18 @@ export function CreateListingForm({ onSuccess }: { onSuccess?: () => void }) {
         throw new Error("Failed to upload image");
       }
 
+      // Get current user
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+      
+      const userId = sessionData.session?.user.id;
+      if (!userId) {
+        toast.error("You must be logged in to create a listing");
+        return;
+      }
+
       console.log("Inserting listing data to database...");
-      // Then create the listing with the image URL
+      // Then create the listing with the image URL and seller_id
       const { error } = await supabase
         .from('listings')
         .insert([
@@ -99,7 +109,9 @@ export function CreateListingForm({ onSuccess }: { onSuccess?: () => void }) {
             price: parseFloat(price), 
             location, 
             image: imageUrl,
-            description: description || null
+            description: description || null,
+            seller_id: userId,
+            is_visible: true
           }
         ]);
 

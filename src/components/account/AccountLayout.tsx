@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileTab } from "./ProfileTab";
 import { WishlistTab } from "./WishlistTab";
 import { PreferencesTab } from "./PreferencesTab";
+import { MyListingsTab } from "./MyListingsTab";
 
 interface AccountLayoutProps {
   handleSignOut: () => Promise<void>;
@@ -15,12 +16,17 @@ export const AccountLayout: React.FC<AccountLayoutProps> = ({ handleSignOut }) =
       <Tabs defaultValue="profile" className="w-full">
         <TabsList className="mb-8">
           <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="my-listings">My Listings</TabsTrigger>
           <TabsTrigger value="wishlist">Wishlist</TabsTrigger>
           <TabsTrigger value="preferences">Preferences</TabsTrigger>
         </TabsList>
         
         <TabsContent value="profile">
           <ProfileTab handleSignOut={handleSignOut} />
+        </TabsContent>
+        
+        <TabsContent value="my-listings">
+          <MyListingsTab />
         </TabsContent>
         
         <TabsContent value="wishlist">
