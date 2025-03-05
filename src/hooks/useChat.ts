@@ -28,10 +28,22 @@ export function useChat(userId: string, listingId: number, existingChatId?: stri
       setIsLoading(true);
       try {
         // Get seller ID for this listing
-        const { data: sellerId, error: sellerError } = await supabase
-          .rpc('get_seller_id_for_listing', { listing_id: listingId });
+        const { data: listing, error: listingError } = await supabase
+          .from('listings')
+          .select('seller_id')
+          .eq('id', listingId)
+          .single();
         
-        if (sellerError) throw sellerError;
+        if (listingError) throw listingError;
+        
+        if (!listing.seller_id) {
+          console.error('No seller_id found for listing:', listingId);
+          toast.error('Could not find the seller for this listing');
+          setIsLoading(false);
+          return;
+        }
+        
+        const sellerId = listing.seller_id;
         
         // Check if a chat already exists
         const { data: existingChat, error: chatError } = await supabase
@@ -107,6 +119,7 @@ export function useChat(userId: string, listingId: number, existingChatId?: stri
           filter: `chat_id=eq.${chatId}`
         },
         (payload) => {
+          console.log('New message received:', payload.new);
           setMessages(current => [...current, payload.new as Message]);
         }
       )

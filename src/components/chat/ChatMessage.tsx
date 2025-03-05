@@ -21,7 +21,7 @@ const ChatMessage = ({ message, isCurrentUser }: ChatMessageProps) => {
       <div
         className={`max-w-[80%] p-3 rounded-lg ${
           isCurrentUser
-            ? 'bg-blue-500 text-white rounded-br-none'
+            ? 'bg-green-500 text-white rounded-br-none'
             : 'bg-gray-200 text-gray-800 rounded-bl-none'
         }`}
       >

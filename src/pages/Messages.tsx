@@ -52,6 +52,24 @@ const Messages = () => {
           },
           (payload) => {
             // Refresh the chats list when there's a change
+            console.log('Chat change detected:', payload);
+            fetchChats(session.user.id);
+          }
+        )
+        .subscribe();
+
+      // Also subscribe to message changes to update the last message
+      const messagesChannel = supabase
+        .channel('messages-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages'
+          },
+          (payload) => {
+            console.log('New message detected:', payload);
             fetchChats(session.user.id);
           }
         )
@@ -59,6 +77,7 @@ const Messages = () => {
 
       return () => {
         supabase.removeChannel(channel);
+        supabase.removeChannel(messagesChannel);
       };
     };
 
@@ -68,6 +87,7 @@ const Messages = () => {
   const fetchChats = async (userId: string) => {
     setIsLoading(true);
     try {
+      console.log('Fetching chats for user:', userId);
       // Fetch chats with listing details and last message
       const { data, error } = await supabase
         .from('chats')
@@ -79,6 +99,8 @@ const Messages = () => {
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
+
+      console.log('Chats data:', data);
 
       // Fetch the last message for each chat
       const chatsWithLastMessage = await Promise.all(data.map(async (chat) => {
@@ -97,6 +119,7 @@ const Messages = () => {
         };
       }));
 
+      console.log('Chats with last message:', chatsWithLastMessage);
       setChats(chatsWithLastMessage);
     } catch (error) {
       console.error('Error fetching chats:', error);
@@ -133,7 +156,7 @@ const Messages = () => {
             <p className="text-gray-500 mb-6">
               Start browsing listings and contact sellers to begin a conversation
             </p>
-            <Button onClick={() => navigate("/")}>Browse Listings</Button>
+            <Button onClick={() => navigate("/")} className="bg-green-600 hover:bg-green-700">Browse Listings</Button>
           </div>
         ) : (
           <div className="bg-white rounded-xl shadow-md overflow-hidden">
@@ -145,14 +168,21 @@ const Messages = () => {
               >
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-md bg-gray-200 overflow-hidden">
-                    <img 
-                      src={chat.listing.image} 
-                      alt={chat.listing.title}
-                      className="w-full h-full object-cover" 
-                    />
+                    {chat.listing && chat.listing.image ? (
+                      <img 
+                        src={chat.listing.image} 
+                        alt={chat.listing?.title || 'Product'}
+                        className="w-full h-full object-cover" 
+                        onError={(e) => (e.currentTarget.src = '/placeholder.svg')}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                        <span className="text-gray-400">No Image</span>
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-medium text-gray-900">{chat.listing.title}</h3>
+                    <h3 className="font-medium text-gray-900">{chat.listing?.title || 'Unknown Product'}</h3>
                     {chat.last_message ? (
                       <>
                         <p className="text-gray-600 text-sm line-clamp-1 mt-1">
@@ -178,7 +208,7 @@ const Messages = () => {
           isOpen={!!selectedChat}
           onClose={() => setSelectedChat(null)}
           listingId={selectedChat.listing_id}
-          listingTitle={selectedChat.listing.title}
+          listingTitle={selectedChat.listing?.title || 'Unknown Product'}
           userId={user.id}
           onMessageSent={handleChatUpdate}
           chatId={selectedChat.id}
