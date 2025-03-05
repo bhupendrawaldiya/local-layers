@@ -156,10 +156,40 @@ export function useChat(userId: string, listingId: number, existingChatId?: stri
     }
   };
 
+  const deleteChat = async () => {
+    if (!chatId) return;
+    
+    try {
+      // First delete all messages in the chat
+      const { error: messagesError } = await supabase
+        .from('messages')
+        .delete()
+        .eq('chat_id', chatId);
+      
+      if (messagesError) throw messagesError;
+      
+      // Then delete the chat itself
+      const { error: chatError } = await supabase
+        .from('chats')
+        .delete()
+        .eq('id', chatId);
+      
+      if (chatError) throw chatError;
+      
+      setChatId(null);
+      setMessages([]);
+      
+    } catch (error) {
+      console.error('Error deleting chat:', error);
+      throw error;
+    }
+  };
+
   return {
     chatId,
     messages,
     isLoading,
-    sendMessage
+    sendMessage,
+    deleteChat
   };
 }
