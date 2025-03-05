@@ -1,36 +1,17 @@
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Review } from "@/types/listings";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface ProductReviewsProps {
   reviews: Review[] | undefined;
+  isLoading?: boolean;
 }
 
-const ProductReviews = ({ reviews }: ProductReviewsProps) => {
-  const [isLoading, setIsLoading] = useState(true);
-  
-  useEffect(() => {
-    // Simulate data loading delay
-    const timeout = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-    
-    return () => clearTimeout(timeout);
-  }, [reviews]);
-  
-  if (!reviews || reviews.length === 0) {
-    return (
-      <div className="mt-12 bg-white p-6 rounded-xl shadow-sm">
-        <h2 className="text-xl font-semibold mb-4 text-green-700">Reviews</h2>
-        <p className="text-gray-500 text-center py-6">No reviews yet. Be the first to review this product!</p>
-      </div>
-    );
-  }
-  
+const ProductReviews = ({ reviews, isLoading = false }: ProductReviewsProps) => {
   if (isLoading) {
     return (
-      <div className="mt-12 bg-white p-6 rounded-xl shadow-sm">
+      <div className="mt-8 bg-white p-6 rounded-xl shadow-sm">
         <h2 className="text-xl font-semibold mb-4 text-green-700">Reviews</h2>
         <div className="space-y-4">
           {[1, 2].map((item) => (
@@ -49,8 +30,17 @@ const ProductReviews = ({ reviews }: ProductReviewsProps) => {
     );
   }
   
+  if (!reviews || reviews.length === 0) {
+    return (
+      <div className="mt-8 bg-white p-6 rounded-xl shadow-sm">
+        <h2 className="text-xl font-semibold mb-4 text-green-700">Reviews</h2>
+        <p className="text-gray-500 text-center py-6">No reviews yet. Be the first to review this product!</p>
+      </div>
+    );
+  }
+  
   return (
-    <div className="mt-12 bg-white p-6 rounded-xl shadow-sm">
+    <div className="mt-8 bg-white p-6 rounded-xl shadow-sm">
       <h2 className="text-xl font-semibold mb-4 text-green-700">Reviews</h2>
       <div className="space-y-4">
         {reviews.map((review) => (
