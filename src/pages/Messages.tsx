@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -6,6 +5,18 @@ import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import ChatModal from "@/components/chat/ChatModal";
+import { Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface Chat {
   id: string;
@@ -133,7 +144,31 @@ const Messages = () => {
     setSelectedChat(chat);
   };
 
-  // Function to handle chat refresh after sending a message
+  const handleDeleteChat = async (chatId: string) => {
+    try {
+      const { error: messagesError } = await supabase
+        .from('messages')
+        .delete()
+        .eq('chat_id', chatId);
+      
+      if (messagesError) throw messagesError;
+      
+      const { error: chatError } = await supabase
+        .from('chats')
+        .delete()
+        .eq('id', chatId);
+      
+      if (chatError) throw chatError;
+      
+      // Remove the deleted chat from the state
+      setChats(chats.filter(chat => chat.id !== chatId));
+      toast.success("Chat deleted successfully");
+    } catch (error) {
+      console.error('Error deleting chat:', error);
+      toast.error("Failed to delete chat");
+    }
+  };
+
   const handleChatUpdate = () => {
     if (user) {
       fetchChats(user.id);
@@ -163,8 +198,7 @@ const Messages = () => {
             {chats.map((chat) => (
               <div 
                 key={chat.id}
-                onClick={() => handleChatSelect(chat)}
-                className="p-4 border-b last:border-b-0 hover:bg-gray-50 cursor-pointer transition-colors"
+                className="p-4 border-b last:border-b-0 hover:bg-gray-50 transition-colors"
               >
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-md bg-gray-200 overflow-hidden">
@@ -182,7 +216,33 @@ const Messages = () => {
                     )}
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-medium text-gray-900">{chat.listing?.title || 'Unknown Product'}</h3>
+                    <div className="flex justify-between items-center">
+                      <h3 className="font-medium text-gray-900">{chat.listing?.title || 'Unknown Product'}</h3>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon" className="text-gray-400 hover:text-red-500">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Chat</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete this chat? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction 
+                              onClick={() => handleDeleteChat(chat.id)}
+                              className="bg-red-500 hover:bg-red-600"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                     {chat.last_message ? (
                       <>
                         <p className="text-gray-600 text-sm line-clamp-1 mt-1">
