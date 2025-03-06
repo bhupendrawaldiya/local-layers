@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { SlidersHorizontal, X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { SlidersHorizontal, X, Search } from "lucide-react";
 import { useState } from "react";
 
 interface ProductFiltersProps {
@@ -12,9 +13,17 @@ interface ProductFiltersProps {
   locations: string[];
   selectedLocations: string[];
   setSelectedLocations: (locations: string[]) => void;
+  categories: string[];
+  selectedCategories: string[];
+  setSelectedCategories: (categories: string[]) => void;
+  condition: string;
+  setCondition: (condition: string) => void;
   sortBy: string;
   setSortBy: (sort: string) => void;
   onClearFilters: () => void;
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
+  onSearch: () => void;
 }
 
 export const ProductFilters = ({
@@ -23,9 +32,17 @@ export const ProductFilters = ({
   locations,
   selectedLocations,
   setSelectedLocations,
+  categories,
+  selectedCategories,
+  setSelectedCategories,
+  condition,
+  setCondition,
   sortBy,
   setSortBy,
-  onClearFilters
+  onClearFilters,
+  searchTerm,
+  setSearchTerm,
+  onSearch
 }: ProductFiltersProps) => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
@@ -37,8 +54,29 @@ export const ProductFilters = ({
     }
   };
 
+  const handleCategoryChange = (category: string) => {
+    if (selectedCategories.includes(category)) {
+      setSelectedCategories(selectedCategories.filter(cat => cat !== category));
+    } else {
+      setSelectedCategories([...selectedCategories, category]);
+    }
+  };
+
   const filtersContent = (
     <div className="space-y-6">
+      {/* Search Bar */}
+      <div className="relative">
+        <Input
+          type="text"
+          placeholder="Search products..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10"
+        />
+        <Search className="absolute left-3 top-1/2 -translate 
+y-1/2 text-gray-400 h-5 w-5" />
+      </div>
+
       {/* Price Range Filter */}
       <div>
         <h3 className="text-lg font-medium text-gray-900 mb-3">Price Range</h3>
@@ -56,28 +94,48 @@ export const ProductFilters = ({
         </div>
       </div>
 
-      {/* Sort By Filter */}
+      {/* Categories Filter */}
       <div>
-        <h3 className="text-lg font-medium text-gray-900 mb-3">Sort By</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-3">Categories</h3>
         <div className="space-y-2">
-          {[
-            { value: "newest", label: "Newest" },
-            { value: "oldest", label: "Oldest" },
-            { value: "price-low", label: "Price: Low to High" },
-            { value: "price-high", label: "Price: High to Low" }
-          ].map((option) => (
-            <div key={option.value} className="flex items-center">
+          {categories.map((category) => (
+            <div key={category} className="flex items-center">
+              <Checkbox
+                id={`category-${category}`}
+                checked={selectedCategories.includes(category)}
+                onCheckedChange={() => handleCategoryChange(category)}
+              />
+              <Label
+                htmlFor={`category-${category}`}
+                className="ml-2"
+              >
+                {category}
+              </Label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Condition Filter */}
+      <div>
+        <h3 className="text-lg font-medium text-gray-900 mb-3">Condition</h3>
+        <div className="space-y-2">
+          {['New', 'Like New', 'Good', 'Fair', 'Poor'].map((conditionOption) => (
+            <div key={conditionOption} className="flex items-center">
               <input
                 type="radio"
-                id={option.value}
-                name="sortBy"
-                checked={sortBy === option.value}
-                onChange={() => setSortBy(option.value)}
-                className="h-4 w-4 text-primary border-gray-300 focus:ring-primary"
+                id={`condition-${conditionOption}`}
+                name="condition"
+                checked={condition === conditionOption}
+                onChange={() => setCondition(conditionOption)}
+                className="h-4 w-4 text-primary border-gray-300"
               />
-              <label htmlFor={option.value} className="ml-3 text-sm text-gray-600">
-                {option.label}
-              </label>
+              <Label
+                htmlFor={`condition-${conditionOption}`}
+                className="ml-2"
+              >
+                {conditionOption}
+              </Label>
             </div>
           ))}
         </div>
@@ -96,10 +154,38 @@ export const ProductFilters = ({
               />
               <Label
                 htmlFor={`location-${location}`}
-                className="ml-2 text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                className="ml-2"
               >
                 {location}
               </Label>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Sort By Filter */}
+      <div>
+        <h3 className="text-lg font-medium text-gray-900 mb-3">Sort By</h3>
+        <div className="space-y-2">
+          {[
+            { value: "newest", label: "Newest" },
+            { value: "oldest", label: "Oldest" },
+            { value: "price-low", label: "Price: Low to High" },
+            { value: "price-high", label: "Price: High to Low" },
+            { value: "rating-high", label: "Highest Rated" }
+          ].map((option) => (
+            <div key={option.value} className="flex items-center">
+              <input
+                type="radio"
+                id={option.value}
+                name="sortBy"
+                checked={sortBy === option.value}
+                onChange={() => setSortBy(option.value)}
+                className="h-4 w-4 text-primary border-gray-300"
+              />
+              <label htmlFor={option.value} className="ml-3 text-sm text-gray-600">
+                {option.label}
+              </label>
             </div>
           ))}
         </div>

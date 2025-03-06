@@ -46,6 +46,8 @@ export type Database = {
       }
       listings: {
         Row: {
+          categories: string[] | null
+          condition: string | null
           created_at: string
           description: string | null
           id: number
@@ -54,9 +56,12 @@ export type Database = {
           location: string
           price: number
           seller_id: string | null
+          tags: string[] | null
           title: string
         }
         Insert: {
+          categories?: string[] | null
+          condition?: string | null
           created_at?: string
           description?: string | null
           id?: number
@@ -65,9 +70,12 @@ export type Database = {
           location: string
           price: number
           seller_id?: string | null
+          tags?: string[] | null
           title: string
         }
         Update: {
+          categories?: string[] | null
+          condition?: string | null
           created_at?: string
           description?: string | null
           id?: number
@@ -76,6 +84,7 @@ export type Database = {
           location?: string
           price?: number
           seller_id?: string | null
+          tags?: string[] | null
           title?: string
         }
         Relationships: []
@@ -108,6 +117,41 @@ export type Database = {
             columns: ["chat_id"]
             isOneToOne: false
             referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          listing_id: number
+          rating: number
+          reviewer_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          listing_id: number
+          rating: number
+          reviewer_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          listing_id?: number
+          rating?: number
+          reviewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
             referencedColumns: ["id"]
           },
         ]
@@ -146,6 +190,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_listing_average_rating: {
+        Args: {
+          listing_id_param: number
+        }
+        Returns: number
+      }
       get_seller_id_for_listing: {
         Args: {
           listing_id: number

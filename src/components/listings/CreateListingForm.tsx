@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,17 +17,20 @@ export function CreateListingForm({ onSuccess }: { onSuccess?: () => void }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [condition, setCondition] = useState("Used");
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState("");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
       setFile(selectedFile);
       
-      // Create a preview URL
       const objectUrl = URL.createObjectURL(selectedFile);
       setPreviewUrl(objectUrl);
       
-      // Clean up the preview URL when component unmounts
       return () => URL.revokeObjectURL(objectUrl);
     }
   };
@@ -64,6 +66,20 @@ export function CreateListingForm({ onSuccess }: { onSuccess?: () => void }) {
     }
   };
 
+  const handleAddCategory = () => {
+    if (selectedCategory && !categories.includes(selectedCategory)) {
+      setCategories([...categories, selectedCategory]);
+      setSelectedCategory("");
+    }
+  };
+
+  const handleAddTag = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && tagInput.trim() && !tags.includes(tagInput.trim())) {
+      setTags([...tags, tagInput.trim()]);
+      setTagInput("");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -81,7 +97,6 @@ export function CreateListingForm({ onSuccess }: { onSuccess?: () => void }) {
 
     try {
       console.log("Starting image upload...");
-      // Upload image first
       const imageUrl = await uploadImage();
       console.log("Image upload complete, URL:", imageUrl);
       
@@ -89,7 +104,6 @@ export function CreateListingForm({ onSuccess }: { onSuccess?: () => void }) {
         throw new Error("Failed to upload image");
       }
 
-      // Get current user
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) throw sessionError;
       
@@ -100,7 +114,6 @@ export function CreateListingForm({ onSuccess }: { onSuccess?: () => void }) {
       }
 
       console.log("Inserting listing data to database...");
-      // Then create the listing with the image URL and seller_id
       const { error } = await supabase
         .from('listings')
         .insert([
@@ -111,7 +124,10 @@ export function CreateListingForm({ onSuccess }: { onSuccess?: () => void }) {
             image: imageUrl,
             description: description || null,
             seller_id: userId,
-            is_visible: true
+            is_visible: true,
+            categories,
+            condition,
+            tags
           }
         ]);
 
@@ -123,7 +139,6 @@ export function CreateListingForm({ onSuccess }: { onSuccess?: () => void }) {
       console.log("Listing created successfully");
       toast.success("Listing created successfully!");
       
-      // Reset form
       setTitle("");
       setPrice("");
       setLocation("");
@@ -244,7 +259,84 @@ export function CreateListingForm({ onSuccess }: { onSuccess?: () => void }) {
             )}
           </div>
         </div>
-        
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Condition
+          </label>
+          <select
+            value={condition}
+            onChange={(e) => setCondition(e.target.value)}
+            className="w-full border border-gray-300 rounded-md px-3 py-2"
+          >
+            {['New', 'Like New', 'Good', 'Fair', 'Poor'].map((option) => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Categories
+          </label>
+          <div className="flex gap-2 mb-2">
+            <Input
+              type="text"
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              placeholder="Add a category"
+            />
+            <Button type="button" onClick={handleAddCategory}>Add</Button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {categories.map((category) => (
+              <span
+                key={category}
+                className="bg-gray-100 px-2 py-1 rounded-full text-sm flex items-center"
+              >
+                {category}
+                <button
+                  type="button"
+                  onClick={() => setCategories(categories.filter(c => c !== category))}
+                  className="ml-1 text-gray-500 hover:text-gray-700"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Tags
+          </label>
+          <Input
+            type="text"
+            value={tagInput}
+            onChange={(e) => setTagInput(e.target.value)}
+            onKeyPress={handleAddTag}
+            placeholder="Press Enter to add tags"
+          />
+          <div className="flex flex-wrap gap-2 mt-2">
+            {tags.map((tag) => (
+              <span
+                key={tag}
+                className="bg-gray-100 px-2 py-1 rounded-full text-sm flex items-center"
+              >
+                {tag}
+                <button
+                  type="button"
+                  onClick={() => setTags(tags.filter(t => t !== tag))}
+                  className="ml-1 text-gray-500 hover:text-gray-700"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        </div>
+
         <Button 
           type="submit" 
           className="w-full"
