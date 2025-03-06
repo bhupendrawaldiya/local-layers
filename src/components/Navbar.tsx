@@ -3,14 +3,16 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
-import { Home, Heart, MessageSquare, PackageSearch, UserCircle, LogOut } from "lucide-react";
+import { Home, Heart, MessageSquare, PackageSearch, UserCircle, LogOut, Sun, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -51,7 +53,7 @@ const Navbar = () => {
           "flex items-center gap-2 px-3 py-2 rounded-md transition-colors",
           isActive
             ? "bg-primary/10 text-primary"
-            : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
+            : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-100",
           isMobile && "w-full"
         )}
         onClick={() => isMobile && setIsOpen(false)}
@@ -63,13 +65,13 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="fixed w-full bg-white/80 backdrop-blur-md shadow-sm z-50">
+    <nav className="fixed w-full bg-white/80 dark:bg-gray-900/90 backdrop-blur-md shadow-sm z-50 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
               <img src="/favicon.ico" alt="Logo" className="h-8 w-8 mr-2" />
-              <span className="text-xl font-bold text-gray-900">Local Find</span>
+              <span className="text-xl font-bold text-gray-900 dark:text-white">Local Find</span>
             </Link>
           </div>
 
@@ -86,7 +88,7 @@ const Navbar = () => {
                   variant="ghost"
                   size="sm"
                   onClick={handleSignOut}
-                  className="ml-2 text-red-500 hover:text-red-600 hover:bg-red-50"
+                  className="ml-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
                 >
                   <LogOut className="h-5 w-5 mr-2" />
                   Sign Out
@@ -96,7 +98,7 @@ const Navbar = () => {
             {!user && (
               <>
                 <Link to="/signin">
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" className="dark:text-gray-300 dark:hover:text-white">
                     Sign In
                   </Button>
                 </Link>
@@ -105,13 +107,43 @@ const Navbar = () => {
                 </Link>
               </>
             )}
+            
+            {/* Theme toggle button */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={toggleTheme}
+              className="ml-2 text-gray-600 dark:text-gray-300"
+              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {theme === 'dark' ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </Button>
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
+          <div className="md:hidden flex items-center gap-2">
+            {/* Mobile theme toggle */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={toggleTheme}
+              className="text-gray-600 dark:text-gray-300"
+              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {theme === 'dark' ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </Button>
+
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary"
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary dark:hover:bg-gray-800 dark:hover:text-gray-300"
             >
               <span className="sr-only">Open main menu</span>
               <svg
@@ -150,7 +182,7 @@ const Navbar = () => {
       </div>
 
       {/* Mobile menu */}
-      <div className={`${isOpen ? "block" : "hidden"} md:hidden bg-white shadow-md`}>
+      <div className={`${isOpen ? "block" : "hidden"} md:hidden bg-white dark:bg-gray-900 shadow-md`}>
         <div className="pt-2 pb-3 space-y-1 px-4">
           <NavLink to="/" icon={Home} label="Home" isMobile />
           <NavLink to="/products" icon={PackageSearch} label="Products" isMobile />
@@ -161,7 +193,7 @@ const Navbar = () => {
               <NavLink to="/account" icon={UserCircle} label="Account" isMobile />
               <button
                 onClick={handleSignOut}
-                className="flex items-center gap-2 px-3 py-2 w-full text-left rounded-md transition-colors text-red-500 hover:bg-red-50"
+                className="flex items-center gap-2 px-3 py-2 w-full text-left rounded-md transition-colors text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
               >
                 <LogOut className="h-5 w-5" />
                 <span>Sign Out</span>
@@ -171,7 +203,7 @@ const Navbar = () => {
           {!user && (
             <div className="flex flex-col space-y-2 pt-2">
               <Link to="/signin" className="w-full">
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full dark:text-gray-300 dark:border-gray-700">
                   Sign In
                 </Button>
               </Link>
