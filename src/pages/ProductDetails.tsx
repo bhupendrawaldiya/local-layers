@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -97,7 +96,12 @@ const ProductDetails = () => {
     setIsChatOpen(true);
   };
 
-  // Show loading or not found state if needed
+  const handleReviewAdded = () => {
+    if (id) {
+      fetchProductDetails(parseInt(id));
+    }
+  };
+
   const loadingComponent = (
     <ProductLoading 
       isLoading={isLoading} 
@@ -129,7 +133,11 @@ const ProductDetails = () => {
           </div>
         </div>
         
-        <ProductReviews reviews={product.reviews} />
+        <ProductReviews 
+          reviews={product.reviews} 
+          listingId={product.id}
+          onReviewAdded={handleReviewAdded}
+        />
       </div>
       
       {isChatOpen && user && product && (

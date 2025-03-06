@@ -1,10 +1,9 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Review } from "@/types/listings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ReviewForm } from "@/components/reviews/ReviewForm";
 import { Button } from "@/components/ui/button";
-import { useUser } from "@supabase/auth-helpers-react";
+import { supabase } from "@/lib/supabase";
 
 interface ProductReviewsProps {
   reviews: Review[] | undefined;
@@ -15,7 +14,21 @@ interface ProductReviewsProps {
 
 const ProductReviews = ({ reviews, isLoading = false, listingId, onReviewAdded }: ProductReviewsProps) => {
   const [showReviewForm, setShowReviewForm] = useState(false);
-  const user = useUser();
+  const [user, setUser] = useState<null | { id: string }>(null);
+
+  useEffect(() => {
+    // Get current auth state
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   if (isLoading) {
     return (
