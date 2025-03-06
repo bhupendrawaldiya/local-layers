@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -58,8 +59,7 @@ const Messages = () => {
           {
             event: '*', // Listen for all events (INSERT, UPDATE, DELETE)
             schema: 'public',
-            table: 'chats',
-            filter: `buyer_id=eq.${session.user.id},seller_id=eq.${session.user.id}`
+            table: 'chats'
           },
           (payload) => {
             // Refresh the chats list when there's a change
@@ -106,8 +106,7 @@ const Messages = () => {
           *,
           listing:listings(id, title, image)
         `)
-        .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
-        .order('updated_at', { ascending: false });
+        .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`);
 
       if (error) throw error;
 
@@ -146,6 +145,7 @@ const Messages = () => {
 
   const handleDeleteChat = async (chatId: string) => {
     try {
+      // First delete all messages in the chat
       const { error: messagesError } = await supabase
         .from('messages')
         .delete()
@@ -153,6 +153,7 @@ const Messages = () => {
       
       if (messagesError) throw messagesError;
       
+      // Then delete the chat itself
       const { error: chatError } = await supabase
         .from('chats')
         .delete()
@@ -201,7 +202,10 @@ const Messages = () => {
                 className="p-4 border-b last:border-b-0 hover:bg-gray-50 transition-colors"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-md bg-gray-200 overflow-hidden">
+                  <div 
+                    className="w-16 h-16 rounded-md bg-gray-200 overflow-hidden cursor-pointer"
+                    onClick={() => handleChatSelect(chat)}
+                  >
                     {chat.listing && chat.listing.image ? (
                       <img 
                         src={chat.listing.image} 
@@ -215,12 +219,20 @@ const Messages = () => {
                       </div>
                     )}
                   </div>
-                  <div className="flex-1">
+                  <div 
+                    className="flex-1 cursor-pointer"
+                    onClick={() => handleChatSelect(chat)}
+                  >
                     <div className="flex justify-between items-center">
                       <h3 className="font-medium text-gray-900">{chat.listing?.title || 'Unknown Product'}</h3>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="text-gray-400 hover:text-red-500">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="text-gray-400 hover:text-red-500"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </AlertDialogTrigger>
