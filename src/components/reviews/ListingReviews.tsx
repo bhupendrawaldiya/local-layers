@@ -6,7 +6,7 @@ const platformReviews: Review[] = [
     id: 1,
     authorName: "Sarah M.",
     rating: 5,
-    comment: "LocalFinds has transformed how I discover unique items in my community. The platform is so easy to use!",
+    comment: "Local Find has transformed how I discover unique items in my community. The platform is so easy to use!",
     date: "2024-03-15"
   },
   {
@@ -20,7 +20,7 @@ const platformReviews: Review[] = [
     id: 3,
     authorName: "Emily R.",
     rating: 5,
-    comment: "Found so many incredible vintage pieces through LocalFinds. It's become my go-to marketplace!",
+    comment: "Found so many incredible vintage pieces through Local Find. It's become my go-to marketplace!",
     date: "2024-03-08"
   },
   {

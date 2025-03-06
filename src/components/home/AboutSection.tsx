@@ -6,7 +6,7 @@ export const AboutSection = () => {
     <section className="bg-white py-24 px-4">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16 fade-in opacity-0 translate-y-4">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">About LocalFinds</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">About Local Find</h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Connecting local buyers and sellers in a trusted community marketplace
           </p>

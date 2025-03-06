@@ -69,7 +69,7 @@ const Navbar = () => {
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
               <img src="/favicon.ico" alt="Logo" className="h-8 w-8 mr-2" />
-              <span className="text-xl font-bold text-gray-900">Marketplace</span>
+              <span className="text-xl font-bold text-gray-900">Local Find</span>
             </Link>
           </div>
 
