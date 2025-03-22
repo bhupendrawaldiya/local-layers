@@ -267,7 +267,7 @@ export function CreateListingForm({ onSuccess }: { onSuccess?: () => void }) {
           <select
             value={condition}
             onChange={(e) => setCondition(e.target.value)}
-            className="w-full border border-gray-300 rounded-md px-3 py-2"
+            className="w-full border border-gray-300 rounded-md px-3 py-2 cl-black"
           >
             {['New', 'Like New', 'Good', 'Fair', 'Poor'].map((option) => (
               <option key={option} value={option}>{option}</option>
@@ -292,7 +292,7 @@ export function CreateListingForm({ onSuccess }: { onSuccess?: () => void }) {
             {categories.map((category) => (
               <span
                 key={category}
-                className="bg-gray-100 px-2 py-1 rounded-full text-sm flex items-center"
+                className="bg-gray-100 px-2 py-1 rounded-full text-sm flex items-center cl-black"
               >
                 {category}
                 <button

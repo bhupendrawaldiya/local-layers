@@ -214,10 +214,10 @@ export const MyListingsTab = () => {
                   </div>
                 </div>
                 <div className="p-4">
-                  <h3 className="text-lg font-medium text-gray-900 line-clamp-1">{listing.title}</h3>
-                  <p className="mt-1 text-sm text-gray-500">{listing.location}</p>
-                  <p className="mt-2 text-lg font-semibold text-gray-900">${listing.price.toLocaleString()}</p>
-                  
+                  <h3 className="text-lg font-medium text-gray-900 line-clamp-1 cl-black">{listing.title}</h3>
+                  <p className="mt-1 text-sm text-gray-500 cl-black">{listing.location}</p>
+                  <p className="mt-2 text-lg font-semibold text-gray-900 cl-black">${listing.price.toLocaleString()}</p>
+                    
                   <div className="mt-4 flex justify-between items-center">
                     <div className="flex items-center">
                       <span className="text-sm text-gray-700 mr-2">Visible:</span>

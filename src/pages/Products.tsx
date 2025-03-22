@@ -151,8 +151,8 @@ const Products = () => {
               </div>
             ) : (
               <div>
-                <p className="text-sm text-gray-500 mb-4">{filteredProducts.length} products found</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                <p className="text-sm text-gray-500 mb-4 cl-black">{filteredProducts.length} products found</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 cl-black">
                   {filteredProducts.map((product, index) => (
                     <ListingCard key={product.id} listing={product} index={index} />
                   ))}

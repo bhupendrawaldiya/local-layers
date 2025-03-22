@@ -25,7 +25,7 @@ const ChatInput = ({ onSendMessage, isDisabled }: ChatInputProps) => {
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
           placeholder="Type your message..."
-          className="flex-1 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cl-black"
           disabled={isDisabled}
         />
         <Button 

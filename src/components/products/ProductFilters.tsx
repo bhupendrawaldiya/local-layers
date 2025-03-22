@@ -61,7 +61,7 @@ export const ProductFilters = ({
             id="price-min"
             value={priceRange[0]}
             onChange={(e) => setPriceRange([parseInt(e.target.value), priceRange[1]])}
-            className="w-20 border rounded-md px-2 py-1 text-sm"
+            className="w-20 border rounded-md px-2 py-1 text-sm  filter-style"
           />
           <label htmlFor="price-max">Max:</label>
           <input
@@ -69,7 +69,7 @@ export const ProductFilters = ({
             id="price-max"
             value={priceRange[1]}
             onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
-            className="w-20 border rounded-md px-2 py-1 text-sm"
+            className="w-20 border rounded-md px-2 py-1 text-sm filter-style"
           />
         </div>
         <Slider

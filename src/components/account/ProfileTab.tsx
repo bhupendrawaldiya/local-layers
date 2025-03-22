@@ -10,16 +10,16 @@ export const ProfileTab = ({ handleSignOut }: { handleSignOut: () => Promise<voi
 
   return (
     <div className="bg-white shadow rounded-lg p-6 md:p-8">
-      <h1 className="text-2xl font-semibold mb-6">Profile Information</h1>
+      <h1 className="text-2xl font-semibold mb-6 cl-black">Profile Information</h1>
       <div className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1 cl-black">Email</label>
           <Input type="email" value={user?.email || ""} disabled className="bg-gray-50" />
-          <p className="mt-1 text-xs text-gray-500">Email cannot be changed</p>
+          <p className="mt-1 text-xs text-gray-500 cl-black">Email cannot be changed</p>
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1 cl-black">Full Name</label>
           <Input 
             type="text" 
             value={profile.fullName || ""} 
@@ -29,7 +29,7 @@ export const ProfileTab = ({ handleSignOut }: { handleSignOut: () => Promise<voi
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1 cl-black">Bio</label>
           <Textarea 
             value={profile.bio || ""} 
             onChange={(e) => setProfile({...profile, bio: e.target.value})}
@@ -40,7 +40,7 @@ export const ProfileTab = ({ handleSignOut }: { handleSignOut: () => Promise<voi
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1 cl-black">Phone Number</label>
             <Input 
               type="tel" 
               value={profile.phoneNumber || ""} 
@@ -50,7 +50,7 @@ export const ProfileTab = ({ handleSignOut }: { handleSignOut: () => Promise<voi
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1 cl-black">Location</label>
             <Input 
               type="text" 
               value={profile.location || ""} 
@@ -61,7 +61,7 @@ export const ProfileTab = ({ handleSignOut }: { handleSignOut: () => Promise<voi
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Account Created</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1 cl-black">Account Created</label>
           <p className="text-gray-900">
             {user?.created_at ? new Date(user.created_at).toLocaleDateString() : "-"}
           </p>

@@ -159,7 +159,7 @@ export const ListingCard = ({ listing, index }: ListingCardProps) => {
             {listing.title}
           </h3>
         </div>
-        <p className="mt-1 text-sm text-gray-500">{listing.location}</p>
+        <p className="mt-1 text-sm text-gray-500 cl-black">{listing.location}</p>
         <div className="mt-3 flex justify-between items-center">
           <p className="text-lg font-semibold text-gray-900">${listing.price.toLocaleString()}</p>
           <p className="text-xs text-gray-500">

@@ -1,7 +1,7 @@
 #root {
-  max-width: 1280px;
+  /* max-width: 1280px;z   */
   margin: 0 auto;
-  padding: 2rem;
+  /* padding: 2rem; */
   text-align: center;
 }
 
@@ -39,4 +39,23 @@
 
 .read-the-docs {
   color: #888;
+}
+.max-w-7xl{
+  max-width: 150rem !important;
+}
+.cl-black{
+  color: black;
+  text-align: left;
+}
+.filter-style{
+  opacity: 1;
+    color: black;
+}
+.cursor-close{
+  background: #fff;
+    color: #000;
+    font-size: 30px !important;
+    opacity: 1 !important;
+    font-weight: 600 !important;
+    border-radius: 50% !important;
 }

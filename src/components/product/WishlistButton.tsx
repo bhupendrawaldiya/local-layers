@@ -54,7 +54,7 @@ const WishlistButton = ({ isWishlisted, user, productId, onWishlistChange }: Wis
   return (
     <button
       onClick={toggleWishlist}
-      className="mt-4 flex items-center bg-white border border-gray-300 rounded-full px-4 py-2 hover:bg-gray-50 transition-colors"
+      className="mt-4 flex items-center bg-white border border-gray-300 rounded-full px-4 py-2 hover:bg-gray-50 transition-colors cl-black"
     >
       <Heart
         className={`h-5 w-5 mr-2 transition-colors ${

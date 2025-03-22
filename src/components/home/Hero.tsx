@@ -28,7 +28,7 @@ export const Hero = ({ searchTerm, onSearchChange, onSearch }: HeroProps) => {
                 placeholder="Search for items near you..."
                 className="w-full pl-12 pr-24 sm:pr-32 py-3 sm:py-4 rounded-full border border-gray-200 shadow-sm 
                          focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
-                         transition-all duration-200 text-base sm:text-lg bg-white/80 backdrop-blur-sm hover:bg-white"
+                         transition-all duration-200 text-base sm:text-lg bg-white/80 backdrop-blur-sm hover:bg-white cl-black"
                 value={searchTerm}
                 onChange={onSearchChange}
                 onKeyPress={(e) => e.key === 'Enter' && onSearch()}
