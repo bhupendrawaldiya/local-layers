@@ -1,18 +1,45 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
-import { Home, Heart, MessageSquare, PackageSearch, UserCircle, LogOut, Sun, Moon } from "lucide-react";
+import {
+  Home, Heart, MessageSquare, PackageSearch, UserCircle, LogOut,
+  Sun, Moon, ChevronDown
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/contexts/ThemeContext";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const { data, error } = await supabase
+        .from("listings")
+        .select("categories"); // Fetch categories array from listings
+  
+      if (error) {
+        console.error("Error fetching categories:", error.message);
+        return;
+      }
+  
+      // Extract unique category names
+      const uniqueCategories = [
+        ...new Set(data.flatMap((listing) => listing.categories ?? [])),
+      ];
+  
+      setCategories(uniqueCategories);
+    };
+  
+    fetchCategories();
+  }, []);
+  
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -33,19 +60,8 @@ const Navbar = () => {
     navigate("/");
   };
 
-  const NavLink = ({
-    to,
-    icon: Icon,
-    label,
-    isMobile = false,
-  }: {
-    to: string;
-    icon: React.ElementType;
-    label: string;
-    isMobile?: boolean;
-  }) => {
+  const NavLink = ({ to, icon: Icon, label, isMobile = false }) => {
     const isActive = location.pathname === to;
-    
     return (
       <Link
         to={to}
@@ -75,10 +91,41 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Desktop navigation */}
+          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-1">
             <NavLink to="/" icon={Home} label="Home" />
-            <NavLink to="/products" icon={PackageSearch} label="Products" />
+
+            {/* Products Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center gap-2 px-3 py-2 rounded-md transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-100"
+              >
+                <PackageSearch className="h-5 w-5" />
+                <span>Products</span>
+                <ChevronDown className="h-4 w-4" />
+              </button>
+
+              {isDropdownOpen && (
+                <div className="absolute left-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-2 z-50">
+                  {categories.length > 0 ? (
+                    categories.map((cat, index) => (
+                      <Link
+                        key={index} // Using index if no unique ID is available
+                        to={`/products/${cat}`}
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
+                        onClick={() => setIsDropdownOpen(false)} // Close dropdown on click
+                      >
+                        {cat}
+                      </Link>
+                    ))
+                  ) : (
+                    <p className="px-4 py-2 text-sm text-gray-500">No Categories</p>
+                  )}
+                </div>
+              )}
+            </div>
+
             {user && (
               <>
                 <NavLink to="/wishlist" icon={Heart} label="Wishlist" />
@@ -107,115 +154,22 @@ const Navbar = () => {
                 </Link>
               </>
             )}
-            
-            {/* Theme toggle button */}
-            <Button 
-              variant="ghost" 
-              size="icon" 
+
+            {/* Theme Toggle Button */}
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={toggleTheme}
               className="ml-2 text-gray-600 dark:text-gray-300"
-              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
             >
-              {theme === 'dark' ? (
-                <Sun className="h-5 w-5" />
-              ) : (
-                <Moon className="h-5 w-5" />
-              )}
+              {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>
           </div>
-
-          {/* Mobile menu button */}
-          <div className="md:hidden flex items-center gap-2">
-            {/* Mobile theme toggle */}
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={toggleTheme}
-              className="text-gray-600 dark:text-gray-300"
-              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-            >
-              {theme === 'dark' ? (
-                <Sun className="h-5 w-5" />
-              ) : (
-                <Moon className="h-5 w-5" />
-              )}
-            </Button>
-
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary dark:hover:bg-gray-800 dark:hover:text-gray-300"
-            >
-              <span className="sr-only">Open main menu</span>
-              <svg
-                className={`${isOpen ? "hidden" : "block"} h-6 w-6`}
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-              <svg
-                className={`${isOpen ? "block" : "hidden"} h-6 w-6`}
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile menu */}
-      <div className={`${isOpen ? "block" : "hidden"} md:hidden bg-white dark:bg-gray-900 shadow-md`}>
-        <div className="pt-2 pb-3 space-y-1 px-4">
-          <NavLink to="/" icon={Home} label="Home" isMobile />
-          <NavLink to="/products" icon={PackageSearch} label="Products" isMobile />
-          {user && (
-            <>
-              <NavLink to="/wishlist" icon={Heart} label="Wishlist" isMobile />
-              <NavLink to="/messages" icon={MessageSquare} label="Messages" isMobile />
-              <NavLink to="/account" icon={UserCircle} label="Account" isMobile />
-              <button
-                onClick={handleSignOut}
-                className="flex items-center gap-2 px-3 py-2 w-full text-left rounded-md transition-colors text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
-              >
-                <LogOut className="h-5 w-5" />
-                <span>Sign Out</span>
-              </button>
-            </>
-          )}
-          {!user && (
-            <div className="flex flex-col space-y-2 pt-2">
-              <Link to="/signin" className="w-full">
-                <Button variant="outline" className="w-full dark:text-gray-300 dark:border-gray-700">
-                  Sign In
-                </Button>
-              </Link>
-              <Link to="/signup" className="w-full">
-                <Button className="w-full">Sign Up</Button>
-              </Link>
-            </div>
-          )}
         </div>
       </div>
     </nav>
   );
-}
+};
 
 export default Navbar;
