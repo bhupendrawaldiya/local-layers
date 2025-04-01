@@ -130,7 +130,6 @@ const Navbar = () => {
               <>
                 <NavLink to="/wishlist" icon={Heart} label="Wishlist" />
                 <NavLink to="/messages" icon={MessageSquare} label="Messages" />
-                 {/* <NavLink to="/products" icon={PackageSearch} label="Products" isMobile /> */}
                 <NavLink to="/account" icon={UserCircle} label="Account" />
                 <Button
                   variant="ghost"
