@@ -1,7 +1,7 @@
+
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
-import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import Navbar from "./Navbar";
 import { ProductFilters } from "./products/ProductFilters";

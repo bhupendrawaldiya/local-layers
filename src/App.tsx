@@ -27,8 +27,8 @@ export default function App() {
           <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/products" element={<Products />} />
           <Route path="/messages" element={<Messages />} />
-          <Route path="*" element={<NotFound />} />
           <Route path="/products/:category" element={<CategoryProducts />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
         <Toaster />
       </Router>
