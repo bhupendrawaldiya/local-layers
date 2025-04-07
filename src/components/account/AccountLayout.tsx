@@ -3,7 +3,6 @@ import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileTab } from "./ProfileTab";
 import { WishlistTab } from "./WishlistTab";
-import { PreferencesTab } from "./PreferencesTab";
 import { MyListingsTab } from "./MyListingsTab";
 
 interface AccountLayoutProps {
@@ -18,7 +17,6 @@ export const AccountLayout: React.FC<AccountLayoutProps> = ({ handleSignOut }) =
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="my-listings">My Listings</TabsTrigger>
           <TabsTrigger value="wishlist">Wishlist</TabsTrigger>
-          <TabsTrigger value="preferences">Preferences</TabsTrigger>
           <TabsTrigger value="messages" onClick={() => window.location.href = "/messages"}>Messages</TabsTrigger>
         </TabsList>
         
@@ -32,10 +30,6 @@ export const AccountLayout: React.FC<AccountLayoutProps> = ({ handleSignOut }) =
         
         <TabsContent value="wishlist">
           <WishlistTab />
-        </TabsContent>
-        
-        <TabsContent value="preferences">
-          <PreferencesTab />
         </TabsContent>
       </Tabs>
     </div>

@@ -26,11 +26,6 @@ export const ProfileProvider = ({ children, saveProfileFn }: { children: ReactNo
     bio: "",
     phoneNumber: "",
     location: "",
-    preferences: {
-      notifications: true,
-      newsletter: false,
-      darkMode: false,
-    },
   });
   const [wishlistedItems, setWishlistedItems] = useState<ListingCardType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
