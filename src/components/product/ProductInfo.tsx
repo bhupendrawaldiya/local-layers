@@ -28,7 +28,7 @@ const ProductInfo = ({
           <p className="text-gray-600 mb-4">{product.location}</p>
         </div>
         <div className="flex flex-col items-end">
-          <p className="text-3xl font-bold text-gray-900">${product.price}</p>
+          <p className="text-3xl font-bold text-gray-900">₹{product.price}</p>
           <WishlistButton 
             isWishlisted={isWishlisted}
             user={user}
