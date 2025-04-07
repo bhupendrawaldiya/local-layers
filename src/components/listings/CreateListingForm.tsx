@@ -6,6 +6,8 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { Image, Loader2 } from "lucide-react";
 import { DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function CreateListingForm({ onSuccess }: { onSuccess?: () => void }) {
   const [title, setTitle] = useState("");
@@ -22,6 +24,7 @@ export function CreateListingForm({ onSuccess }: { onSuccess?: () => void }) {
   const [condition, setCondition] = useState("Used");
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
+  const isMobile = useIsMobile();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -165,13 +168,13 @@ export function CreateListingForm({ onSuccess }: { onSuccess?: () => void }) {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow">
-      <DialogTitle className="text-xl font-semibold mb-4">Create New Listing</DialogTitle>
+    <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow max-h-[80vh] overflow-y-auto">
+      <DialogTitle className="text-xl font-semibold mb-4 text-left">Create New Listing</DialogTitle>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+        <div className="space-y-2">
+          <Label htmlFor="title" className="text-sm font-medium text-left block">
             Title*
-          </label>
+          </Label>
           <Input
             id="title"
             value={title}
@@ -181,10 +184,10 @@ export function CreateListingForm({ onSuccess }: { onSuccess?: () => void }) {
           />
         </div>
         
-        <div>
-          <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
-            Price ($)*
-          </label>
+        <div className="space-y-2">
+          <Label htmlFor="price" className="text-sm font-medium text-left block">
+            Price (₹)*
+          </Label>
           <Input
             id="price"
             type="number"
@@ -197,10 +200,10 @@ export function CreateListingForm({ onSuccess }: { onSuccess?: () => void }) {
           />
         </div>
         
-        <div>
-          <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
+        <div className="space-y-2">
+          <Label htmlFor="location" className="text-sm font-medium text-left block">
             Location*
-          </label>
+          </Label>
           <Input
             id="location"
             value={location}
@@ -210,23 +213,23 @@ export function CreateListingForm({ onSuccess }: { onSuccess?: () => void }) {
           />
         </div>
         
-        <div>
-          <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+        <div className="space-y-2">
+          <Label htmlFor="description" className="text-sm font-medium text-left block">
             Description
-          </label>
+          </Label>
           <Textarea
             id="description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Enter listing description"
-            className="w-full min-h-[100px]"
+            className="w-full min-h-[80px]"
           />
         </div>
         
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-left block">
             Image*
-          </label>
+          </Label>
           <Input
             ref={fileInputRef}
             id="image"
@@ -260,14 +263,14 @@ export function CreateListingForm({ onSuccess }: { onSuccess?: () => void }) {
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-left block">
             Condition
-          </label>
+          </Label>
           <select
             value={condition}
             onChange={(e) => setCondition(e.target.value)}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 cl-black"
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-black dark:text-white dark:bg-gray-700"
           >
             {['New', 'Like New', 'Good', 'Fair', 'Poor'].map((option) => (
               <option key={option} value={option}>{option}</option>
@@ -275,30 +278,37 @@ export function CreateListingForm({ onSuccess }: { onSuccess?: () => void }) {
           </select>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-left block">
             Categories
-          </label>
-          <div className="flex gap-2 mb-2">
+          </Label>
+          <div className={`flex ${isMobile ? 'flex-col' : 'gap-2'} mb-2`}>
             <Input
               type="text"
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
               placeholder="Add a category"
+              className={isMobile ? 'mb-2' : ''}
             />
-            <Button type="button" onClick={handleAddCategory}>Add</Button>
+            <Button 
+              type="button" 
+              onClick={handleAddCategory}
+              className={isMobile ? 'w-full' : ''}
+            >
+              Add
+            </Button>
           </div>
           <div className="flex flex-wrap gap-2">
             {categories.map((category) => (
               <span
                 key={category}
-                className="bg-gray-100 px-2 py-1 rounded-full text-sm flex items-center cl-black"
+                className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full text-sm flex items-center text-black dark:text-white"
               >
                 {category}
                 <button
                   type="button"
                   onClick={() => setCategories(categories.filter(c => c !== category))}
-                  className="ml-1 text-gray-500 hover:text-gray-700"
+                  className="ml-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                 >
                   ×
                 </button>
@@ -307,10 +317,10 @@ export function CreateListingForm({ onSuccess }: { onSuccess?: () => void }) {
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-left block">
             Tags
-          </label>
+          </Label>
           <Input
             type="text"
             value={tagInput}
@@ -322,13 +332,13 @@ export function CreateListingForm({ onSuccess }: { onSuccess?: () => void }) {
             {tags.map((tag) => (
               <span
                 key={tag}
-                className="bg-gray-100 px-2 py-1 rounded-full text-sm flex items-center"
+                className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full text-sm flex items-center text-black dark:text-white"
               >
                 {tag}
                 <button
                   type="button"
                   onClick={() => setTags(tags.filter(t => t !== tag))}
-                  className="ml-1 text-gray-500 hover:text-gray-700"
+                  className="ml-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                 >
                   ×
                 </button>
