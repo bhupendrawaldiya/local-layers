@@ -58,25 +58,10 @@ const ChatModal = ({
         const otherUser = data.buyer_id === userId ? data.seller_id : data.buyer_id;
         setOtherUserId(otherUser);
         
-        // Fetch user profile information
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('id, fullName, email')
-          .eq('id', otherUser)
-          .maybeSingle();
+        // We'll just use the user ID as the display name
+        // since the profiles table doesn't exist in the database yet
+        setOtherUserInfo({ id: otherUser });
         
-        if (profileError && profileError.code !== 'PGRST116') {
-          // PGRST116 is "No rows returned" which might happen if profiles table doesn't exist yet
-          console.error('Error fetching profile:', profileError);
-        }
-        
-        // If we couldn't get profile data, at least show their ID
-        if (profileData) {
-          setOtherUserInfo(profileData);
-        } else {
-          // If profiles table doesn't exist, we'll just show the user ID
-          setOtherUserInfo({ id: otherUser });
-        }
       } catch (error) {
         console.error('Error fetching chat participants:', error);
       }

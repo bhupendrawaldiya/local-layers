@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
 interface Notification {
@@ -10,6 +10,7 @@ interface Notification {
   related_id: string | null;
   is_read: boolean;
   created_at: string;
+  user_id: string;
 }
 
 interface CreateNotificationProps {
@@ -18,6 +19,19 @@ interface CreateNotificationProps {
   type: 'message' | 'price_drop' | 'wishlist' | 'system';
   relatedId?: string | number;
 }
+
+// Type guard to check if an object is a Notification
+const isNotification = (obj: any): obj is Notification => {
+  return obj 
+    && typeof obj.content === 'string'
+    && (obj.type === 'message' || obj.type === 'price_drop' || obj.type === 'wishlist' || obj.type === 'system')
+    && typeof obj.is_read === 'boolean';
+};
+
+// Cast function to safely convert data to Notifications
+const safeNotificationCast = (data: any[]): Notification[] => {
+  return data.filter(isNotification);
+};
 
 export const useNotifications = () => {
   const { toast } = useToast();
@@ -28,6 +42,7 @@ export const useNotifications = () => {
   const fetchNotifications = async (userId: string) => {
     try {
       setLoading(true);
+      // @ts-ignore - Supabase client doesn't include notifications table in its types
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
@@ -40,8 +55,9 @@ export const useNotifications = () => {
         return [];
       }
       
-      setNotifications(data || []);
-      const unread = data?.filter(n => !n.is_read).length || 0;
+      const typedNotifications = safeNotificationCast(data || []);
+      setNotifications(typedNotifications);
+      const unread = typedNotifications.filter(n => !n.is_read).length || 0;
       setUnreadCount(unread);
       return data;
     } catch (error) {
@@ -59,6 +75,7 @@ export const useNotifications = () => {
     relatedId
   }: CreateNotificationProps) => {
     try {
+      // @ts-ignore - Supabase client doesn't include notifications table in its types
       const { data, error } = await supabase
         .from('notifications')
         .insert({
@@ -92,6 +109,7 @@ export const useNotifications = () => {
 
   const markAsRead = async (notificationId: string) => {
     try {
+      // @ts-ignore - Supabase client doesn't include notifications table in its types
       const { error } = await supabase
         .from('notifications')
         .update({ is_read: true })
@@ -117,6 +135,7 @@ export const useNotifications = () => {
 
   const markAllAsRead = async (userId: string) => {
     try {
+      // @ts-ignore - Supabase client doesn't include notifications table in its types
       const { error } = await supabase
         .from('notifications')
         .update({ is_read: true })
@@ -141,6 +160,7 @@ export const useNotifications = () => {
 
   const getUnreadCount = async (userId: string) => {
     try {
+      // @ts-ignore - Supabase client doesn't include notifications table in its types
       const { count, error } = await supabase
         .from('notifications')
         .select('*', { count: 'exact', head: true })
@@ -174,15 +194,17 @@ export const useNotifications = () => {
         },
         (payload) => {
           const newNotification = payload.new as Notification;
-          setNotifications(current => [newNotification, ...current]);
-          setUnreadCount(count => count + 1);
-          
-          // Show a toast for the new notification
-          toast({
-            title: "New Notification",
-            description: newNotification.content,
-            duration: 5000,
-          });
+          if (isNotification(newNotification)) {
+            setNotifications(current => [newNotification, ...current]);
+            setUnreadCount(count => count + 1);
+            
+            // Show a toast for the new notification
+            toast({
+              title: "New Notification",
+              description: newNotification.content,
+              duration: 5000,
+            });
+          }
         }
       )
       .on(
@@ -195,15 +217,17 @@ export const useNotifications = () => {
         },
         (payload) => {
           const updatedNotification = payload.new as Notification;
-          setNotifications(current => 
-            current.map(notif => 
-              notif.id === updatedNotification.id ? updatedNotification : notif
-            )
-          );
-          
-          // Recalculate unread count if needed
-          if (payload.old && !payload.old.is_read && payload.new.is_read) {
-            setUnreadCount(current => Math.max(0, current - 1));
+          if (isNotification(updatedNotification)) {
+            setNotifications(current => 
+              current.map(notif => 
+                notif.id === updatedNotification.id ? updatedNotification : notif
+              )
+            );
+            
+            // Recalculate unread count if needed
+            if (payload.old && !payload.old.is_read && updatedNotification.is_read) {
+              setUnreadCount(current => Math.max(0, current - 1));
+            }
           }
         }
       )
