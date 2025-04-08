@@ -7,6 +7,7 @@ import ChatInput from "./ChatInput";
 import { useChat } from "@/hooks/useChat";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { useNotifications } from "@/hooks/useNotifications";
 
 interface UserInfo {
   id: string;
@@ -37,6 +38,7 @@ const ChatModal = ({
   const { chatId, messages, isLoading, sendMessage, deleteChat } = useChat(userId, listingId, existingChatId);
   const [otherUserId, setOtherUserId] = useState<string | null>(null);
   const [otherUserInfo, setOtherUserInfo] = useState<UserInfo | null>(null);
+  const { createNotification } = useNotifications();
   
   useEffect(() => {
     const fetchChatParticipants = async () => {
@@ -85,8 +87,24 @@ const ChatModal = ({
   
   if (!isOpen) return null;
 
-  const handleSendMessage = (content: string) => {
-    sendMessage(content);
+  const handleSendMessage = async (content: string) => {
+    await sendMessage(content);
+    
+    // Send notification to the other user if we have their ID
+    if (otherUserId) {
+      const displayName = 
+        otherUserInfo?.fullName || 
+        otherUserInfo?.email || 
+        `User ${userId.substring(0, 8)}...`;
+      
+      await createNotification({
+        userId: otherUserId,
+        content: `New message from ${displayName} about "${listingTitle}"`,
+        type: 'message',
+        relatedId: chatId
+      });
+    }
+    
     if (onMessageSent) {
       onMessageSent();
     }
