@@ -1,7 +1,7 @@
-
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from './use-toast';
+import { useNotifications } from './useNotifications';
 
 interface Message {
   id: string;
@@ -14,6 +14,8 @@ export function useChat(userId: string, listingId: number, existingChatId?: stri
   const [chatId, setChatId] = useState<string | null>(existingChatId || null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { createNotification } = useNotifications();
+  const [otherUserId, setOtherUserId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!userId) return;
@@ -21,6 +23,19 @@ export function useChat(userId: string, listingId: number, existingChatId?: stri
     const initializeChat = async () => {
       if (existingChatId) {
         setChatId(existingChatId);
+        
+        // Get the other user in this chat
+        const { data: chatData, error: chatError } = await supabase
+          .from('chats')
+          .select('buyer_id, seller_id')
+          .eq('id', existingChatId)
+          .single();
+        
+        if (chatData) {
+          const otherId = chatData.buyer_id === userId ? chatData.seller_id : chatData.buyer_id;
+          setOtherUserId(otherId);
+        }
+        
         setIsLoading(false);
         return;
       }
@@ -30,7 +45,7 @@ export function useChat(userId: string, listingId: number, existingChatId?: stri
         // Get seller ID for this listing
         const { data: listing, error: listingError } = await supabase
           .from('listings')
-          .select('seller_id')
+          .select('seller_id, title')
           .eq('id', listingId)
           .single();
         
@@ -38,12 +53,17 @@ export function useChat(userId: string, listingId: number, existingChatId?: stri
         
         if (!listing.seller_id) {
           console.error('No seller_id found for listing:', listingId);
-          toast.error('Could not find the seller for this listing');
+          toast({
+            title: "Error",
+            description: "Could not find the seller for this listing",
+            variant: "destructive"
+          });
           setIsLoading(false);
           return;
         }
         
         const sellerId = listing.seller_id;
+        setOtherUserId(sellerId);
         
         // Check if a chat already exists
         const { data: existingChat, error: chatError } = await supabase
@@ -73,17 +93,31 @@ export function useChat(userId: string, listingId: number, existingChatId?: stri
           if (createError) throw createError;
           
           setChatId(newChat.id);
+          
+          // Send notification to seller about new chat
+          if (sellerId) {
+            createNotification({
+              userId: sellerId,
+              content: `Someone is interested in your listing: "${listing.title}"`,
+              type: 'message',
+              relatedId: newChat.id
+            });
+          }
         }
       } catch (error) {
         console.error('Error initializing chat:', error);
-        toast.error('Failed to start chat');
+        toast({
+          title: "Error",
+          description: "Failed to start chat",
+          variant: "destructive"
+        });
       } finally {
         setIsLoading(false);
       }
     };
     
     initializeChat();
-  }, [userId, listingId, existingChatId]);
+  }, [userId, listingId, existingChatId, createNotification]);
   
   useEffect(() => {
     if (!chatId) return;
@@ -98,7 +132,11 @@ export function useChat(userId: string, listingId: number, existingChatId?: stri
       
       if (error) {
         console.error('Error loading messages:', error);
-        toast.error('Failed to load messages');
+        toast({
+          title: "Error",
+          description: "Failed to load messages",
+          variant: "destructive"
+        });
         return;
       }
       
@@ -119,8 +157,19 @@ export function useChat(userId: string, listingId: number, existingChatId?: stri
           filter: `chat_id=eq.${chatId}`
         },
         (payload) => {
-          console.log('New message received:', payload.new);
-          setMessages(current => [...current, payload.new as Message]);
+          const newMessage = payload.new as Message;
+          console.log('New message received:', newMessage);
+          setMessages(current => [...current, newMessage]);
+          
+          // If message is from the other user, create a notification
+          if (newMessage.sender_id !== userId && otherUserId) {
+            createNotification({
+              userId,
+              content: 'You received a new message',
+              type: 'message',
+              relatedId: chatId
+            });
+          }
         }
       )
       .subscribe();
@@ -128,7 +177,7 @@ export function useChat(userId: string, listingId: number, existingChatId?: stri
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [chatId]);
+  }, [chatId, userId, otherUserId, createNotification]);
 
   const sendMessage = async (content: string) => {
     if (!content.trim() || !chatId || !userId) return;
@@ -150,9 +199,23 @@ export function useChat(userId: string, listingId: number, existingChatId?: stri
         .update({ updated_at: new Date().toISOString() })
         .eq('id', chatId);
       
+      // Send notification to the other user
+      if (otherUserId) {
+        createNotification({
+          userId: otherUserId,
+          content: 'You received a new message',
+          type: 'message',
+          relatedId: chatId
+        });
+      }
+      
     } catch (error) {
       console.error('Error sending message:', error);
-      toast.error('Failed to send message');
+      toast({
+        title: "Error",
+        description: "Failed to send message",
+        variant: "destructive"
+      });
     }
   };
 

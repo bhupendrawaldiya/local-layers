@@ -2,9 +2,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
-import { supabase } from "@/lib/supabase";
 import { Bell, Check, MessageCircle, ShoppingBag, Tag, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNotifications } from "@/hooks/useNotifications";
 
 interface Notification {
   id: string;
@@ -18,22 +18,19 @@ interface Notification {
 interface NotificationListProps {
   notifications: Notification[];
   onMarkAllRead: () => void;
+  loading?: boolean;
 }
 
-const NotificationList = ({ notifications, onMarkAllRead }: NotificationListProps) => {
+const NotificationList = ({ notifications, onMarkAllRead, loading = false }: NotificationListProps) => {
   const navigate = useNavigate();
+  const { markAsRead } = useNotifications();
   const [markingRead, setMarkingRead] = useState<string | null>(null);
 
   const handleNotificationClick = async (notification: Notification) => {
     // Mark as read if not already read
     if (!notification.is_read) {
       setMarkingRead(notification.id);
-      
-      await supabase
-        .from('notifications')
-        .update({ is_read: true })
-        .eq('id', notification.id);
-        
+      await markAsRead(notification.id);
       setMarkingRead(null);
     }
     
@@ -58,6 +55,8 @@ const NotificationList = ({ notifications, onMarkAllRead }: NotificationListProp
         return <Tag className="h-5 w-5 text-green-500" />;
       case 'wishlist':
         return <ShoppingBag className="h-5 w-5 text-purple-500" />;
+      case 'system':
+        return <AlertCircle className="h-5 w-5 text-amber-500" />;
       default:
         return <Bell className="h-5 w-5 text-gray-500" />;
     }
@@ -78,7 +77,12 @@ const NotificationList = ({ notifications, onMarkAllRead }: NotificationListProp
         </Button>
       </div>
       
-      {notifications.length === 0 ? (
+      {loading ? (
+        <div className="py-8 px-4 text-center">
+          <div className="w-6 h-6 border-2 border-t-blue-500 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin mx-auto mb-2"></div>
+          <p className="text-gray-500">Loading notifications...</p>
+        </div>
+      ) : notifications.length === 0 ? (
         <div className="py-8 px-4 text-center">
           <Bell className="h-8 w-8 text-gray-400 mx-auto mb-2" />
           <p className="text-gray-500">No notifications yet</p>
