@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -96,7 +97,7 @@ const Navbar = () => {
   };
 
   const NavLink = ({ to, icon: Icon, label, isMobile = false }) => {
-    const isActive = location.pathname === to;
+    const isActive = location.pathname === to || location.pathname.startsWith(to + '/');
     return (
       <Link
         to={to}
