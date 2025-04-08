@@ -7,12 +7,19 @@ import {
   Home, Heart, MessageSquare, PackageSearch, UserCircle, LogOut, ChevronDown
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@/components/ui/navigation-menu";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [categories, setCategories] = useState([]);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -92,36 +99,43 @@ const Navbar = () => {
           <div className="hidden md:flex items-center space-x-1">
             <NavLink to="/" icon={Home} label="Home" />
 
-            {/* Products Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="flex items-center gap-2 px-3 py-2 rounded-md transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-              >
-                <PackageSearch className="h-5 w-5" />
-                <span>Products</span>
-                <ChevronDown className="h-4 w-4" />
-              </button>
-
-              {isDropdownOpen && (
-                <div className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-2 z-50">
-                  {categories.length > 0 ? (
-                    categories.map((cat, index) => (
-                      <Link
-                        key={index}
-                        to={`/products/${cat}`}
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => setIsDropdownOpen(false)}
-                      >
-                        {cat}
-                      </Link>
-                    ))
-                  ) : (
-                    <p className="px-4 py-2 text-sm text-gray-500">No Categories</p>
-                  )}
-                </div>
-              )}
-            </div>
+            {/* Products with Dropdown on Hover */}
+            <NavigationMenu>
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900">
+                    <PackageSearch className="h-5 w-5" />
+                    <span>Products</span>
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="grid gap-1 p-2 w-[200px]">
+                      <li>
+                        <NavigationMenuLink asChild>
+                          <Link
+                            to="/products"
+                            className="block w-full px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-100 rounded-md"
+                          >
+                            All Products
+                          </Link>
+                        </NavigationMenuLink>
+                      </li>
+                      {categories.map((category, index) => (
+                        <li key={index}>
+                          <NavigationMenuLink asChild>
+                            <Link
+                              to={`/products/${category}`}
+                              className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
+                            >
+                              {category}
+                            </Link>
+                          </NavigationMenuLink>
+                        </li>
+                      ))}
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
 
             {user && (
               <>
