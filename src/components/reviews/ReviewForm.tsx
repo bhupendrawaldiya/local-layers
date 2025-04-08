@@ -26,7 +26,9 @@ export const ReviewForm = ({ listingId, onSuccess }: ReviewFormProps) => {
     setIsSubmitting(true);
     try {
       // Get the current user
-      const { data: session } = await supabase.auth.getSession();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const session = sessionData?.session;
+      
       if (!session?.user) {
         toast.error("You must be logged in to submit a review");
         return;
