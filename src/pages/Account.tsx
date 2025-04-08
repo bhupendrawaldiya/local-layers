@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -17,11 +16,6 @@ const Account = () => {
     bio: "",
     phoneNumber: "",
     location: "",
-    preferences: {
-      notifications: true,
-      newsletter: false,
-      darkMode: false,
-    },
   });
   const [wishlistedItems, setWishlistedItems] = useState<ListingCardType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -97,11 +91,10 @@ const Account = () => {
 
       console.log('Wishlist data in Account:', wishlistData);
 
-      // Transform the data correctly from the nested structure
       const listings: ListingCardType[] = wishlistData
-        .filter(item => item.listings) // Filter out any null listings
+        .filter(item => item.listings)
         .map(item => {
-          const listing = item.listings as any; // Type assertion to handle the nested structure
+          const listing = item.listings as any;
           return {
             id: listing.id,
             title: listing.title,
