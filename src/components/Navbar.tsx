@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -62,10 +61,8 @@ const Navbar = () => {
   useEffect(() => {
     if (!user) return;
     
-    // Set up subscription to check for new messages
     const checkNewMessages = async () => {
       try {
-        // Get all chats where user is participant
         const { data: chats, error: chatsError } = await supabase
           .from('chats')
           .select('id')
@@ -78,7 +75,6 @@ const Navbar = () => {
           return;
         }
         
-        // Get most recent message for each chat
         const chatIds = chats.map(chat => chat.id);
         const { data: messages, error: messagesError } = await supabase
           .from('messages')
@@ -89,21 +85,22 @@ const Navbar = () => {
         
         if (messagesError) throw messagesError;
         
-        // Check if there are any messages not sent by the current user
         const newMessages = messages.some(message => 
           message.sender_id !== user.id
         );
         
-        setHasNewMessages(newMessages);
+        if (location.pathname !== '/messages') {
+          setHasNewMessages(newMessages);
+        } else {
+          setHasNewMessages(false);
+        }
       } catch (error) {
         console.error('Error checking for new messages:', error);
       }
     };
     
-    // Initial check
     checkNewMessages();
     
-    // Subscribe to new messages
     const channel = supabase
       .channel('schema-db-changes')
       .on(
@@ -114,8 +111,7 @@ const Navbar = () => {
           table: 'messages'
         },
         (payload) => {
-          // If the message is not from the current user, show indicator
-          if (payload.new && payload.new.sender_id !== user.id) {
+          if (payload.new && payload.new.sender_id !== user.id && location.pathname !== '/messages') {
             setHasNewMessages(true);
           }
         }
@@ -125,7 +121,7 @@ const Navbar = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, location.pathname]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -134,6 +130,14 @@ const Navbar = () => {
 
   const NavLink = ({ to, icon: Icon, label, isMobile = false, showIndicator = false }) => {
     const isActive = location.pathname === to || location.pathname.startsWith(to + '/');
+    
+    const handleClick = () => {
+      isMobile && setIsOpen(false);
+      if (to === '/messages') {
+        setHasNewMessages(false);
+      }
+    };
+    
     return (
       <Link
         to={to}
@@ -144,12 +148,7 @@ const Navbar = () => {
             : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
           isMobile && "w-full"
         )}
-        onClick={() => {
-          isMobile && setIsOpen(false);
-          if (to === '/messages') {
-            setHasNewMessages(false);
-          }
-        }}
+        onClick={handleClick}
       >
         <Icon className="h-5 w-5" />
         <span>{label}</span>

@@ -32,7 +32,7 @@ interface Chat {
     created_at: string;
     sender_id: string;
   };
-  has_unread: boolean; // Added this property to fix TypeScript errors
+  has_unread: boolean;
 }
 
 const Messages = () => {
@@ -125,10 +125,13 @@ const Messages = () => {
 
         if (messagesError) throw messagesError;
 
+        // A message is unread if it's not sent by the current user
+        const hasUnread = messages && messages.length > 0 && messages[0].sender_id !== userId;
+
         return {
           ...chat,
           last_message: messages && messages.length > 0 ? messages[0] : undefined,
-          has_unread: messages && messages.length > 0 ? messages[0].sender_id !== userId : false
+          has_unread: hasUnread
         };
       }));
 
@@ -151,6 +154,19 @@ const Messages = () => {
           : c
       )
     );
+    
+    // Set this chat as read in the database
+    const markChatAsRead = async () => {
+      try {
+        // We're not actually storing read status in the DB in this example
+        // but you could add a 'last_read' timestamp to the chats table
+        console.log('Marking chat as read:', chat.id);
+      } catch (error) {
+        console.error('Error marking chat as read:', error);
+      }
+    };
+    
+    markChatAsRead();
     
     // Update selected chat
     setSelectedChat(chat);
