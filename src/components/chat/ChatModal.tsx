@@ -56,17 +56,47 @@ const ChatModal = ({
         const otherUser = data.buyer_id === userId ? data.seller_id : data.buyer_id;
         setOtherUserId(otherUser);
         
-        // We'll just use the user ID as the display name
-        // since the profiles table doesn't exist in the database yet
-        setOtherUserInfo({ id: otherUser });
+        // Fetch user metadata from Supabase auth
+        const { data: userData, error: userError } = await supabase.auth.admin.getUserById(otherUser);
+        
+        if (userError) {
+          console.error('Error fetching user:', userError);
+          // Fall back to just a user ID with nice formatting
+          setOtherUserInfo({ 
+            id: otherUser,
+            fullName: `User ${otherUser.substring(0, 4)}`
+          });
+          return;
+        }
+        
+        if (userData && userData.user) {
+          setOtherUserInfo({
+            id: otherUser,
+            email: userData.user.email,
+            fullName: userData.user.user_metadata?.full_name || userData.user.email?.split('@')[0]
+          });
+        } else {
+          // Fallback if no user data found
+          setOtherUserInfo({ 
+            id: otherUser,
+            fullName: `User ${otherUser.substring(0, 4)}`
+          });
+        }
         
       } catch (error) {
         console.error('Error fetching chat participants:', error);
+        // Fallback to a nicer display of the user ID
+        if (otherUserId) {
+          setOtherUserInfo({ 
+            id: otherUserId,
+            fullName: `User ${otherUserId.substring(0, 4)}`
+          });
+        }
       }
     };
     
     fetchChatParticipants();
-  }, [chatId, userId]);
+  }, [chatId, userId, otherUserId]);
   
   if (!isOpen) return null;
 
@@ -91,6 +121,11 @@ const ChatModal = ({
     }
   };
   
+  // Format the user display name nicely
+  const userDisplayName = otherUserInfo?.fullName || 
+                          otherUserInfo?.email || 
+                          (otherUserId ? `User ${otherUserId.substring(0, 4)}...` : 'Unknown User');
+  
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex justify-center items-center p-4">
       <div className="bg-white rounded-lg shadow-lg w-full max-w-md flex flex-col h-[600px] max-h-[80vh]">
@@ -99,11 +134,9 @@ const ChatModal = ({
             <h2 className="font-semibold text-lg">
               Chat about: {listingTitle}
             </h2>
-            {otherUserInfo && (
-              <p className="text-sm text-gray-600 mt-1">
-                Chatting with: {otherUserInfo.fullName || otherUserInfo.email || `User ${otherUserId?.substring(0, 8)}...`}
-              </p>
-            )}
+            <p className="text-sm text-gray-600 mt-1">
+              Chatting with: {userDisplayName}
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <button 
