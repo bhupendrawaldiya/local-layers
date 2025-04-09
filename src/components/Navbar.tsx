@@ -4,7 +4,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 import {
-  Home, Heart, MessageSquare, PackageSearch, UserCircle, LogOut, Bell
+  Home, Heart, MessageSquare, PackageSearch, UserCircle, LogOut
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -15,31 +15,14 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import NotificationList from "./notifications/NotificationList";
-import { useNotifications } from "@/hooks/useNotifications";
-import { useToast } from "@/hooks/use-toast";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [categories, setCategories] = useState([]);
+  const [hasNewMessages, setHasNewMessages] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
-  
-  const { 
-    notifications, 
-    unreadCount, 
-    loading,
-    fetchNotifications, 
-    markAllAsRead, 
-    setupRealtimeNotifications 
-  } = useNotifications();
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -79,40 +62,100 @@ const Navbar = () => {
   useEffect(() => {
     if (!user) return;
     
-    console.log("Setting up notifications for user:", user.id);
-    fetchNotifications(user.id);
+    // Set up subscription to check for new messages
+    const checkNewMessages = async () => {
+      try {
+        // Get all chats where user is participant
+        const { data: chats, error: chatsError } = await supabase
+          .from('chats')
+          .select('id')
+          .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`);
+        
+        if (chatsError) throw chatsError;
+        
+        if (!chats || chats.length === 0) {
+          setHasNewMessages(false);
+          return;
+        }
+        
+        // Get most recent message for each chat
+        const chatIds = chats.map(chat => chat.id);
+        const { data: messages, error: messagesError } = await supabase
+          .from('messages')
+          .select('chat_id, sender_id, created_at')
+          .in('chat_id', chatIds)
+          .order('created_at', { ascending: false })
+          .limit(50);
+        
+        if (messagesError) throw messagesError;
+        
+        // Check if there are any messages not sent by the current user
+        const newMessages = messages.some(message => 
+          message.sender_id !== user.id
+        );
+        
+        setHasNewMessages(newMessages);
+      } catch (error) {
+        console.error('Error checking for new messages:', error);
+      }
+    };
     
-    const cleanup = setupRealtimeNotifications(user.id);
+    // Initial check
+    checkNewMessages();
     
-    return cleanup;
-  }, [user, fetchNotifications, setupRealtimeNotifications]);
+    // Subscribe to new messages
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages'
+        },
+        (payload) => {
+          // If the message is not from the current user, show indicator
+          if (payload.new && payload.new.sender_id !== user.id) {
+            setHasNewMessages(true);
+          }
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate("/");
   };
 
-  const handleMarkAllAsRead = async () => {
-    if (!user || unreadCount === 0) return;
-    await markAllAsRead(user.id);
-  };
-
-  const NavLink = ({ to, icon: Icon, label, isMobile = false }) => {
+  const NavLink = ({ to, icon: Icon, label, isMobile = false, showIndicator = false }) => {
     const isActive = location.pathname === to || location.pathname.startsWith(to + '/');
     return (
       <Link
         to={to}
         className={cn(
-          "flex items-center gap-2 px-3 py-2 rounded-md transition-colors",
+          "flex items-center gap-2 px-3 py-2 rounded-md transition-colors relative",
           isActive
             ? "bg-primary/10 text-primary"
             : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
           isMobile && "w-full"
         )}
-        onClick={() => isMobile && setIsOpen(false)}
+        onClick={() => {
+          isMobile && setIsOpen(false);
+          if (to === '/messages') {
+            setHasNewMessages(false);
+          }
+        }}
       >
         <Icon className="h-5 w-5" />
         <span>{label}</span>
+        {showIndicator && (
+          <span className="absolute -top-1 -right-1 bg-red-500 h-3 w-3 rounded-full" />
+        )}
       </Link>
     );
   };
@@ -171,31 +214,12 @@ const Navbar = () => {
             {user && (
               <>
                 <NavLink to="/wishlist" icon={Heart} label="Wishlist" />
-                <NavLink to="/messages" icon={MessageSquare} label="Messages" />
-                
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <button 
-                      className="relative flex items-center gap-2 px-3 py-2 rounded-md transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                      aria-label="Notifications"
-                    >
-                      <Bell className="h-5 w-5" />
-                      {unreadCount > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                          {unreadCount > 9 ? '9+' : unreadCount}
-                        </span>
-                      )}
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-80 p-0" align="end">
-                    <NotificationList 
-                      notifications={notifications} 
-                      onMarkAllRead={handleMarkAllAsRead}
-                      loading={loading}
-                    />
-                  </PopoverContent>
-                </Popover>
-                
+                <NavLink 
+                  to="/messages" 
+                  icon={MessageSquare} 
+                  label="Messages" 
+                  showIndicator={hasNewMessages}
+                />
                 <NavLink to="/account" icon={UserCircle} label="Account" />
                 <Button
                   variant="ghost"

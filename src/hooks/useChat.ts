@@ -1,7 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from './use-toast';
-import { useNotifications } from './useNotifications';
 
 interface Message {
   id: string;
@@ -14,7 +14,6 @@ export function useChat(userId: string, listingId: number, existingChatId?: stri
   const [chatId, setChatId] = useState<string | null>(existingChatId || null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { createNotification } = useNotifications();
   const [otherUserId, setOtherUserId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -93,16 +92,6 @@ export function useChat(userId: string, listingId: number, existingChatId?: stri
           if (createError) throw createError;
           
           setChatId(newChat.id);
-          
-          // Send notification to seller about new chat
-          if (sellerId) {
-            createNotification({
-              userId: sellerId,
-              content: `Someone is interested in your listing: "${listing.title}"`,
-              type: 'message',
-              relatedId: newChat.id
-            });
-          }
         }
       } catch (error) {
         console.error('Error initializing chat:', error);
@@ -117,7 +106,7 @@ export function useChat(userId: string, listingId: number, existingChatId?: stri
     };
     
     initializeChat();
-  }, [userId, listingId, existingChatId, createNotification]);
+  }, [userId, listingId, existingChatId]);
   
   useEffect(() => {
     if (!chatId) return;
@@ -160,16 +149,6 @@ export function useChat(userId: string, listingId: number, existingChatId?: stri
           const newMessage = payload.new as Message;
           console.log('New message received:', newMessage);
           setMessages(current => [...current, newMessage]);
-          
-          // If message is from the other user, create a notification
-          if (newMessage.sender_id !== userId && otherUserId) {
-            createNotification({
-              userId,
-              content: 'You received a new message',
-              type: 'message',
-              relatedId: chatId
-            });
-          }
         }
       )
       .subscribe();
@@ -177,7 +156,7 @@ export function useChat(userId: string, listingId: number, existingChatId?: stri
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [chatId, userId, otherUserId, createNotification]);
+  }, [chatId, userId, otherUserId]);
 
   const sendMessage = async (content: string) => {
     if (!content.trim() || !chatId || !userId) return;
@@ -198,16 +177,6 @@ export function useChat(userId: string, listingId: number, existingChatId?: stri
         .from('chats')
         .update({ updated_at: new Date().toISOString() })
         .eq('id', chatId);
-      
-      // Send notification to the other user
-      if (otherUserId) {
-        createNotification({
-          userId: otherUserId,
-          content: 'You received a new message',
-          type: 'message',
-          relatedId: chatId
-        });
-      }
       
     } catch (error) {
       console.error('Error sending message:', error);

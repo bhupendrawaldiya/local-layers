@@ -116,7 +116,7 @@ const Messages = () => {
       const chatsWithLastMessage = await Promise.all(data.map(async (chat) => {
         const { data: messages, error: messagesError } = await supabase
           .from('messages')
-          .select('content, created_at')
+          .select('content, created_at, sender_id')
           .eq('chat_id', chat.id)
           .order('created_at', { ascending: false })
           .limit(1);
@@ -125,7 +125,8 @@ const Messages = () => {
 
         return {
           ...chat,
-          last_message: messages && messages.length > 0 ? messages[0] : undefined
+          last_message: messages && messages.length > 0 ? messages[0] : undefined,
+          has_unread: messages && messages.length > 0 ? messages[0].sender_id !== userId : false
         };
       }));
 
@@ -199,7 +200,7 @@ const Messages = () => {
             {chats.map((chat) => (
               <div 
                 key={chat.id}
-                className="p-4 border-b last:border-b-0 hover:bg-gray-50 transition-colors"
+                className={`p-4 border-b last:border-b-0 hover:bg-gray-50 transition-colors ${chat.has_unread ? 'bg-blue-50' : ''}`}
               >
                 <div className="flex items-center gap-4">
                   <div 
@@ -224,7 +225,12 @@ const Messages = () => {
                     onClick={() => handleChatSelect(chat)}
                   >
                     <div className="flex justify-between items-center">
-                      <h3 className="font-medium text-gray-900">{chat.listing?.title || 'Unknown Product'}</h3>
+                      <h3 className={`font-medium ${chat.has_unread ? 'text-blue-900' : 'text-gray-900'}`}>
+                        {chat.listing?.title || 'Unknown Product'}
+                        {chat.has_unread && (
+                          <span className="ml-2 bg-red-500 h-2 w-2 rounded-full inline-block"></span>
+                        )}
+                      </h3>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button 
@@ -257,7 +263,7 @@ const Messages = () => {
                     </div>
                     {chat.last_message ? (
                       <>
-                        <p className="text-gray-600 text-sm line-clamp-1 mt-1">
+                        <p className={`text-sm line-clamp-1 mt-1 ${chat.has_unread ? 'font-semibold text-blue-800' : 'text-gray-600'}`}>
                           {chat.last_message.content}
                         </p>
                         <p className="text-gray-400 text-xs mt-1">
