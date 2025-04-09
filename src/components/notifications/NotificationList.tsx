@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { Bell, Check, MessageCircle, ShoppingBag, Tag, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotifications } from "@/hooks/useNotifications";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Notification {
   id: string;
@@ -27,23 +28,28 @@ const NotificationList = ({ notifications, onMarkAllRead, loading = false }: Not
   const [markingRead, setMarkingRead] = useState<string | null>(null);
 
   const handleNotificationClick = async (notification: Notification) => {
-    // Mark as read if not already read
-    if (!notification.is_read) {
-      setMarkingRead(notification.id);
-      await markAsRead(notification.id);
+    try {
+      // Mark as read if not already read
+      if (!notification.is_read) {
+        setMarkingRead(notification.id);
+        await markAsRead(notification.id);
+        setMarkingRead(null);
+      }
+      
+      // Navigate based on notification type
+      if (notification.type === 'message' && notification.related_id) {
+        navigate(`/messages?chat=${notification.related_id}`);
+      } else if (notification.type === 'price_drop' && notification.related_id) {
+        navigate(`/product/${notification.related_id}`);
+      } else if (notification.type === 'wishlist' && notification.related_id) {
+        navigate(`/product/${notification.related_id}`);
+      } else {
+        // Default to account page for other notifications
+        navigate('/account');
+      }
+    } catch (error) {
+      console.error("Error handling notification click:", error);
       setMarkingRead(null);
-    }
-    
-    // Navigate based on notification type
-    if (notification.type === 'message' && notification.related_id) {
-      navigate(`/messages?chat=${notification.related_id}`);
-    } else if (notification.type === 'price_drop' && notification.related_id) {
-      navigate(`/product/${notification.related_id}`);
-    } else if (notification.type === 'wishlist' && notification.related_id) {
-      navigate(`/product/${notification.related_id}`);
-    } else {
-      // Default to account page for other notifications
-      navigate('/account');
     }
   };
 
@@ -62,6 +68,36 @@ const NotificationList = ({ notifications, onMarkAllRead, loading = false }: Not
     }
   };
 
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), 'MMM d, h:mm a');
+    } catch (error) {
+      console.error("Error formatting date:", dateString, error);
+      return "Invalid date";
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="max-h-[400px] overflow-y-auto">
+        <div className="p-4 border-b">
+          <h3 className="font-medium">Notifications</h3>
+        </div>
+        <div className="p-4 space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex gap-3">
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <div className="space-y-2 flex-1">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-3 w-24" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-h-[400px] overflow-y-auto">
       <div className="p-4 border-b flex items-center justify-between">
@@ -77,12 +113,7 @@ const NotificationList = ({ notifications, onMarkAllRead, loading = false }: Not
         </Button>
       </div>
       
-      {loading ? (
-        <div className="py-8 px-4 text-center">
-          <div className="w-6 h-6 border-2 border-t-blue-500 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin mx-auto mb-2"></div>
-          <p className="text-gray-500">Loading notifications...</p>
-        </div>
-      ) : notifications.length === 0 ? (
+      {notifications.length === 0 ? (
         <div className="py-8 px-4 text-center">
           <Bell className="h-8 w-8 text-gray-400 mx-auto mb-2" />
           <p className="text-gray-500">No notifications yet</p>
@@ -106,7 +137,7 @@ const NotificationList = ({ notifications, onMarkAllRead, loading = false }: Not
                     {notification.content}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    {format(new Date(notification.created_at), 'MMM d, h:mm a')}
+                    {formatDate(notification.created_at)}
                   </p>
                 </div>
                 {markingRead === notification.id && (

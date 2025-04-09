@@ -79,6 +79,7 @@ const Navbar = () => {
   useEffect(() => {
     if (!user) return;
     
+    console.log("Setting up notifications for user:", user.id);
     fetchNotifications(user.id);
     
     const cleanup = setupRealtimeNotifications(user.id);
@@ -174,7 +175,10 @@ const Navbar = () => {
                 
                 <Popover>
                   <PopoverTrigger asChild>
-                    <button className="relative flex items-center gap-2 px-3 py-2 rounded-md transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900">
+                    <button 
+                      className="relative flex items-center gap-2 px-3 py-2 rounded-md transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                      aria-label="Notifications"
+                    >
                       <Bell className="h-5 w-5" />
                       {unreadCount > 0 && (
                         <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">

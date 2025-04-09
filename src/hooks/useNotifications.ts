@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
@@ -39,10 +39,10 @@ export const useNotifications = () => {
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  const fetchNotifications = async (userId: string) => {
+  const fetchNotifications = useCallback(async (userId: string) => {
     try {
       setLoading(true);
-      // @ts-ignore - Supabase client doesn't include notifications table in its types
+      console.log('Fetching notifications for user:', userId);
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
@@ -55,6 +55,7 @@ export const useNotifications = () => {
         return [];
       }
       
+      console.log('Notifications data:', data);
       const typedNotifications = safeNotificationCast(data || []);
       setNotifications(typedNotifications);
       const unread = typedNotifications.filter(n => !n.is_read).length || 0;
@@ -66,16 +67,16 @@ export const useNotifications = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const createNotification = async ({
+  const createNotification = useCallback(async ({
     userId,
     content,
     type,
     relatedId
   }: CreateNotificationProps) => {
     try {
-      // @ts-ignore - Supabase client doesn't include notifications table in its types
+      console.log('Creating notification:', { userId, content, type, relatedId });
       const { data, error } = await supabase
         .from('notifications')
         .insert({
@@ -93,6 +94,8 @@ export const useNotifications = () => {
         return null;
       }
       
+      console.log('Created notification:', data);
+      
       // Show a toast notification
       toast({
         title: "New Notification",
@@ -105,11 +108,11 @@ export const useNotifications = () => {
       console.error('Error in createNotification:', error);
       return null;
     }
-  };
+  }, [toast]);
 
-  const markAsRead = async (notificationId: string) => {
+  const markAsRead = useCallback(async (notificationId: string) => {
     try {
-      // @ts-ignore - Supabase client doesn't include notifications table in its types
+      console.log('Marking notification as read:', notificationId);
       const { error } = await supabase
         .from('notifications')
         .update({ is_read: true })
@@ -131,11 +134,11 @@ export const useNotifications = () => {
       console.error('Error in markAsRead:', error);
       return false;
     }
-  };
+  }, []);
 
-  const markAllAsRead = async (userId: string) => {
+  const markAllAsRead = useCallback(async (userId: string) => {
     try {
-      // @ts-ignore - Supabase client doesn't include notifications table in its types
+      console.log('Marking all notifications as read for user:', userId);
       const { error } = await supabase
         .from('notifications')
         .update({ is_read: true })
@@ -156,11 +159,11 @@ export const useNotifications = () => {
       console.error('Error in markAllAsRead:', error);
       return false;
     }
-  };
+  }, []);
 
-  const getUnreadCount = async (userId: string) => {
+  const getUnreadCount = useCallback(async (userId: string) => {
     try {
-      // @ts-ignore - Supabase client doesn't include notifications table in its types
+      console.log('Getting unread count for user:', userId);
       const { count, error } = await supabase
         .from('notifications')
         .select('*', { count: 'exact', head: true })
@@ -172,15 +175,17 @@ export const useNotifications = () => {
         return 0;
       }
       
+      console.log('Unread count:', count);
       setUnreadCount(count || 0);
       return count || 0;
     } catch (error) {
       console.error('Error in getUnreadCount:', error);
       return 0;
     }
-  };
+  }, []);
 
-  const setupRealtimeNotifications = (userId: string) => {
+  const setupRealtimeNotifications = useCallback((userId: string) => {
+    console.log('Setting up realtime notifications for user:', userId);
     // Subscribe to new notifications
     const channel = supabase
       .channel('schema-db-changes')
@@ -193,6 +198,7 @@ export const useNotifications = () => {
           filter: `user_id=eq.${userId}`
         },
         (payload) => {
+          console.log('New notification received:', payload);
           const newNotification = payload.new as Notification;
           if (isNotification(newNotification)) {
             setNotifications(current => [newNotification, ...current]);
@@ -216,6 +222,7 @@ export const useNotifications = () => {
           filter: `user_id=eq.${userId}`
         },
         (payload) => {
+          console.log('Notification updated:', payload);
           const updatedNotification = payload.new as Notification;
           if (isNotification(updatedNotification)) {
             setNotifications(current => 
@@ -231,12 +238,15 @@ export const useNotifications = () => {
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Notification subscription status:', status);
+      });
     
     return () => {
+      console.log('Cleaning up notification subscription');
       supabase.removeChannel(channel);
     };
-  };
+  }, [toast]);
 
   return {
     notifications,
