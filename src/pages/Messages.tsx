@@ -30,7 +30,9 @@ interface Chat {
   last_message?: {
     content: string;
     created_at: string;
+    sender_id: string;
   };
+  has_unread: boolean; // Added this property to fix TypeScript errors
 }
 
 const Messages = () => {
