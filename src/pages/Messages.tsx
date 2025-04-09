@@ -143,6 +143,16 @@ const Messages = () => {
   };
 
   const handleChatSelect = (chat: Chat) => {
+    // Mark this chat as read in the UI immediately
+    setChats(prevChats => 
+      prevChats.map(c => 
+        c.id === chat.id 
+          ? { ...c, has_unread: false } 
+          : c
+      )
+    );
+    
+    // Update selected chat
     setSelectedChat(chat);
   };
 
