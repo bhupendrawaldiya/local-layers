@@ -32,7 +32,6 @@ interface Chat {
     created_at: string;
     sender_id: string;
   };
-  has_unread: boolean;
 }
 
 const Messages = () => {
@@ -125,13 +124,9 @@ const Messages = () => {
 
         if (messagesError) throw messagesError;
 
-        // A message is unread if it's not sent by the current user
-        const hasUnread = messages && messages.length > 0 && messages[0].sender_id !== userId;
-
         return {
           ...chat,
-          last_message: messages && messages.length > 0 ? messages[0] : undefined,
-          has_unread: hasUnread
+          last_message: messages && messages.length > 0 ? messages[0] : undefined
         };
       }));
 
@@ -146,29 +141,6 @@ const Messages = () => {
   };
 
   const handleChatSelect = (chat: Chat) => {
-    // Mark this chat as read in the UI immediately
-    setChats(prevChats => 
-      prevChats.map(c => 
-        c.id === chat.id 
-          ? { ...c, has_unread: false } 
-          : c
-      )
-    );
-    
-    // Set this chat as read in the database
-    const markChatAsRead = async () => {
-      try {
-        // We're not actually storing read status in the DB in this example
-        // but you could add a 'last_read' timestamp to the chats table
-        console.log('Marking chat as read:', chat.id);
-      } catch (error) {
-        console.error('Error marking chat as read:', error);
-      }
-    };
-    
-    markChatAsRead();
-    
-    // Update selected chat
     setSelectedChat(chat);
   };
 
@@ -228,7 +200,7 @@ const Messages = () => {
             {chats.map((chat) => (
               <div 
                 key={chat.id}
-                className={`p-4 border-b last:border-b-0 hover:bg-gray-50 transition-colors ${chat.has_unread ? 'bg-blue-50' : ''}`}
+                className="p-4 border-b last:border-b-0 hover:bg-gray-50 transition-colors"
               >
                 <div className="flex items-center gap-4">
                   <div 
@@ -253,11 +225,8 @@ const Messages = () => {
                     onClick={() => handleChatSelect(chat)}
                   >
                     <div className="flex justify-between items-center">
-                      <h3 className={`font-medium ${chat.has_unread ? 'text-blue-900' : 'text-gray-900'}`}>
+                      <h3 className="font-medium text-gray-900">
                         {chat.listing?.title || 'Unknown Product'}
-                        {chat.has_unread && (
-                          <span className="ml-2 bg-red-500 h-2 w-2 rounded-full inline-block"></span>
-                        )}
                       </h3>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
@@ -291,7 +260,7 @@ const Messages = () => {
                     </div>
                     {chat.last_message ? (
                       <>
-                        <p className={`text-sm line-clamp-1 mt-1 ${chat.has_unread ? 'font-semibold text-blue-800' : 'text-gray-600'}`}>
+                        <p className="text-sm line-clamp-1 mt-1 text-gray-600">
                           {chat.last_message.content}
                         </p>
                         <p className="text-gray-400 text-xs mt-1">

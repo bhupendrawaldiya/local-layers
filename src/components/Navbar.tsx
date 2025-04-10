@@ -20,7 +20,6 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [categories, setCategories] = useState([]);
-  const [hasNewMessages, setHasNewMessages] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -59,84 +58,16 @@ const Navbar = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  useEffect(() => {
-    if (!user) return;
-    
-    const checkNewMessages = async () => {
-      try {
-        const { data: chats, error: chatsError } = await supabase
-          .from('chats')
-          .select('id')
-          .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`);
-        
-        if (chatsError) throw chatsError;
-        
-        if (!chats || chats.length === 0) {
-          setHasNewMessages(false);
-          return;
-        }
-        
-        const chatIds = chats.map(chat => chat.id);
-        const { data: messages, error: messagesError } = await supabase
-          .from('messages')
-          .select('chat_id, sender_id, created_at')
-          .in('chat_id', chatIds)
-          .order('created_at', { ascending: false })
-          .limit(50);
-        
-        if (messagesError) throw messagesError;
-        
-        const newMessages = messages.some(message => 
-          message.sender_id !== user.id
-        );
-        
-        if (location.pathname !== '/messages') {
-          setHasNewMessages(newMessages);
-        } else {
-          setHasNewMessages(false);
-        }
-      } catch (error) {
-        console.error('Error checking for new messages:', error);
-      }
-    };
-    
-    checkNewMessages();
-    
-    const channel = supabase
-      .channel('schema-db-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages'
-        },
-        (payload) => {
-          if (payload.new && payload.new.sender_id !== user.id && location.pathname !== '/messages') {
-            setHasNewMessages(true);
-          }
-        }
-      )
-      .subscribe();
-    
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, location.pathname]);
-
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate("/");
   };
 
-  const NavLink = ({ to, icon: Icon, label, isMobile = false, showIndicator = false }) => {
+  const NavLink = ({ to, icon: Icon, label, isMobile = false }) => {
     const isActive = location.pathname === to || location.pathname.startsWith(to + '/');
     
     const handleClick = () => {
       isMobile && setIsOpen(false);
-      if (to === '/messages') {
-        setHasNewMessages(false);
-      }
     };
     
     return (
@@ -153,9 +84,6 @@ const Navbar = () => {
       >
         <Icon className="h-5 w-5" />
         <span>{label}</span>
-        {showIndicator && (
-          <span className="absolute -top-1 -right-1 bg-red-500 h-3 w-3 rounded-full" />
-        )}
       </Link>
     );
   };
@@ -214,12 +142,7 @@ const Navbar = () => {
             {user && (
               <>
                 <NavLink to="/wishlist" icon={Heart} label="Wishlist" />
-                <NavLink 
-                  to="/messages" 
-                  icon={MessageSquare} 
-                  label="Messages" 
-                  showIndicator={hasNewMessages}
-                />
+                <NavLink to="/messages" icon={MessageSquare} label="Messages" />
                 <NavLink to="/account" icon={UserCircle} label="Account" />
                 <Button
                   variant="ghost"
