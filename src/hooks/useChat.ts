@@ -223,25 +223,34 @@ export function useChat(userId: string, listingId: number, existingChatId?: stri
   };
 
   const deleteChat = async () => {
-    if (!chatId) return;
+    if (!chatId) return false;
     
     try {
+      console.log('Deleting all messages for chat:', chatId);
       // First delete all messages in the chat
       const { error: messagesError } = await supabase
         .from('messages')
         .delete()
         .eq('chat_id', chatId);
       
-      if (messagesError) throw messagesError;
+      if (messagesError) {
+        console.error('Error deleting messages:', messagesError);
+        throw messagesError;
+      }
       
+      console.log('Messages deleted, now deleting chat:', chatId);
       // Then delete the chat itself
       const { error: chatError } = await supabase
         .from('chats')
         .delete()
         .eq('id', chatId);
       
-      if (chatError) throw chatError;
+      if (chatError) {
+        console.error('Error deleting chat:', chatError);
+        throw chatError;
+      }
       
+      console.log('Chat deleted successfully');
       setChatId(null);
       setMessages([]);
       

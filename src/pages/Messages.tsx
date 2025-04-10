@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -40,7 +39,7 @@ const Messages = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
-  const [refreshTrigger, setRefreshTrigger] = useState(0); // Add a state to trigger refetch
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -53,7 +52,6 @@ const Messages = () => {
       setUser(session.user);
       fetchChats(session.user.id);
 
-      // Subscribe to updates in the chats table
       const channel = supabase
         .channel('schema-db-changes')
         .on(
@@ -64,14 +62,12 @@ const Messages = () => {
             table: 'chats'
           },
           (payload) => {
-            // Refresh the chats list when there's a change
             console.log('Chat change detected:', payload);
             fetchChats(session.user.id);
           }
         )
         .subscribe();
 
-      // Also subscribe to message changes to update the last message
       const messagesChannel = supabase
         .channel('messages-changes')
         .on(
@@ -95,13 +91,12 @@ const Messages = () => {
     };
 
     checkAuth();
-  }, [navigate, refreshTrigger]); // Add refreshTrigger to the dependency array
+  }, [navigate, refreshTrigger]);
 
   const fetchChats = async (userId: string) => {
     setIsLoading(true);
     try {
       console.log('Fetching chats for user:', userId);
-      // Fetch chats with listing details and last message
       const { data, error } = await supabase
         .from('chats')
         .select(`
@@ -114,7 +109,6 @@ const Messages = () => {
 
       console.log('Chats data:', data);
 
-      // Fetch the last message for each chat
       const chatsWithLastMessage = await Promise.all(data.map(async (chat) => {
         const { data: messages, error: messagesError } = await supabase
           .from('messages')
@@ -147,26 +141,34 @@ const Messages = () => {
 
   const handleDeleteChat = async (chatId: string) => {
     try {
-      // First delete all messages in the chat
+      console.log('Deleting chat:', chatId);
+      
       const { error: messagesError } = await supabase
         .from('messages')
         .delete()
         .eq('chat_id', chatId);
       
-      if (messagesError) throw messagesError;
+      if (messagesError) {
+        console.error('Error deleting messages:', messagesError);
+        throw messagesError;
+      }
       
-      // Then delete the chat itself
+      console.log('Messages deleted successfully, now deleting chat');
+      
       const { error: chatError } = await supabase
         .from('chats')
         .delete()
         .eq('id', chatId);
       
-      if (chatError) throw chatError;
+      if (chatError) {
+        console.error('Error deleting chat:', chatError);
+        throw chatError;
+      }
       
-      // Remove the deleted chat from the state
+      console.log('Chat deleted successfully');
+      
       setChats(chats.filter(chat => chat.id !== chatId));
       
-      // Trigger a refresh to ensure the UI is up to date
       setRefreshTrigger(prev => prev + 1);
       
       toast.success("Chat deleted successfully");
@@ -288,7 +290,6 @@ const Messages = () => {
           isOpen={!!selectedChat}
           onClose={() => {
             setSelectedChat(null);
-            // Refresh the chat list after closing modal
             setRefreshTrigger(prev => prev + 1);
           }}
           listingId={selectedChat.listing_id}

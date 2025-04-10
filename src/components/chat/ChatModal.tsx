@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { X, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -112,14 +111,19 @@ const ChatModal = ({
     if (!chatId) return;
     
     try {
+      console.log('Attempting to delete chat:', chatId);
       const success = await deleteChat();
       if (success) {
+        console.log('Chat deleted successfully');
         toast.success("Chat deleted successfully");
         // Close the modal and notify parent component
         onClose();
         if (onMessageSent) {
           onMessageSent(); // Use the existing callback to refresh the list
         }
+      } else {
+        console.log('Failed to delete chat');
+        toast.error("Failed to delete chat");
       }
     } catch (error) {
       console.error('Error deleting chat:', error);
