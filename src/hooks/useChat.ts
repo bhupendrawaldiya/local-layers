@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from './use-toast';
+import { toast } from 'sonner';
 
 interface Message {
   id: string;
@@ -151,6 +151,20 @@ export function useChat(userId: string, listingId: number, existingChatId?: stri
           setMessages(current => [...current, newMessage]);
         }
       )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'messages',
+          filter: `chat_id=eq.${chatId}`
+        },
+        (payload) => {
+          const deletedMessage = payload.old as Message;
+          console.log('Message deleted:', deletedMessage);
+          setMessages(current => current.filter(msg => msg.id !== deletedMessage.id));
+        }
+      )
       .subscribe();
     
     return () => {
@@ -183,6 +197,49 @@ export function useChat(userId: string, listingId: number, existingChatId?: stri
       toast({
         title: "Error",
         description: "Failed to send message",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const deleteMessage = async (messageId: string) => {
+    if (!chatId || !userId) return;
+    
+    try {
+      // First check if the message belongs to this user
+      const { data: message, error: fetchError } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('id', messageId)
+        .eq('sender_id', userId)
+        .single();
+      
+      if (fetchError) {
+        throw new Error('Message not found or you do not have permission to delete it');
+      }
+      
+      // Delete the message
+      const { error: deleteError } = await supabase
+        .from('messages')
+        .delete()
+        .eq('id', messageId)
+        .eq('sender_id', userId); // Extra security to make sure only the sender can delete
+      
+      if (deleteError) throw deleteError;
+      
+      // Update local state
+      setMessages(current => current.filter(msg => msg.id !== messageId));
+      
+      toast({
+        title: "Success",
+        description: "Message deleted",
+      });
+      
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete message",
         variant: "destructive"
       });
     }
@@ -222,6 +279,7 @@ export function useChat(userId: string, listingId: number, existingChatId?: stri
     messages,
     isLoading,
     sendMessage,
+    deleteMessage,
     deleteChat
   };
 }

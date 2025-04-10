@@ -13,9 +13,10 @@ interface MessageListProps {
   messages: Message[];
   currentUserId: string;
   isLoading: boolean;
+  onDeleteMessage?: (messageId: string) => void;
 }
 
-const MessageList = ({ messages, currentUserId, isLoading }: MessageListProps) => {
+const MessageList = ({ messages, currentUserId, isLoading, onDeleteMessage }: MessageListProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
@@ -46,6 +47,7 @@ const MessageList = ({ messages, currentUserId, isLoading }: MessageListProps) =
           key={message.id}
           message={message}
           isCurrentUser={message.sender_id === currentUserId}
+          onDeleteMessage={onDeleteMessage}
         />
       ))}
       <div ref={messagesEndRef} />

@@ -34,7 +34,7 @@ const ChatModal = ({
   chatId: existingChatId 
 }: ChatModalProps) => {
   
-  const { chatId, messages, isLoading, sendMessage, deleteChat } = useChat(userId, listingId, existingChatId);
+  const { chatId, messages, isLoading, sendMessage, deleteMessage, deleteChat } = useChat(userId, listingId, existingChatId);
   const [otherUserId, setOtherUserId] = useState<string | null>(null);
   const [otherUserInfo, setOtherUserInfo] = useState<UserInfo | null>(null);
   
@@ -121,6 +121,10 @@ const ChatModal = ({
     }
   };
   
+  const handleDeleteMessage = async (messageId: string) => {
+    await deleteMessage(messageId);
+  };
+  
   // Format the user display name nicely
   const userDisplayName = otherUserInfo?.fullName || 
                           otherUserInfo?.email || 
@@ -160,6 +164,7 @@ const ChatModal = ({
           messages={messages} 
           currentUserId={userId} 
           isLoading={isLoading}
+          onDeleteMessage={handleDeleteMessage}
         />
         
         <ChatInput 
