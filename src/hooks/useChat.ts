@@ -245,9 +245,11 @@ export function useChat(userId: string, listingId: number, existingChatId?: stri
       setChatId(null);
       setMessages([]);
       
+      return true; // Return true to indicate successful deletion
     } catch (error) {
       console.error('Error deleting chat:', error);
-      throw error;
+      toast.error("Failed to delete chat");
+      return false; // Return false to indicate failed deletion
     }
   };
 

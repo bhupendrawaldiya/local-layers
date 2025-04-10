@@ -112,9 +112,15 @@ const ChatModal = ({
     if (!chatId) return;
     
     try {
-      await deleteChat();
-      toast.success("Chat deleted successfully");
-      onClose();
+      const success = await deleteChat();
+      if (success) {
+        toast.success("Chat deleted successfully");
+        // Close the modal and notify parent component
+        onClose();
+        if (onMessageSent) {
+          onMessageSent(); // Use the existing callback to refresh the list
+        }
+      }
     } catch (error) {
       console.error('Error deleting chat:', error);
       toast.error("Failed to delete chat");
@@ -123,6 +129,9 @@ const ChatModal = ({
   
   const handleDeleteMessage = async (messageId: string) => {
     await deleteMessage(messageId);
+    if (onMessageSent) {
+      onMessageSent(); // Refresh the message list in parent component
+    }
   };
   
   // Format the user display name nicely

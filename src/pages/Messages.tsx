@@ -40,6 +40,7 @@ const Messages = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0); // Add a state to trigger refetch
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -94,7 +95,7 @@ const Messages = () => {
     };
 
     checkAuth();
-  }, [navigate]);
+  }, [navigate, refreshTrigger]); // Add refreshTrigger to the dependency array
 
   const fetchChats = async (userId: string) => {
     setIsLoading(true);
@@ -164,6 +165,10 @@ const Messages = () => {
       
       // Remove the deleted chat from the state
       setChats(chats.filter(chat => chat.id !== chatId));
+      
+      // Trigger a refresh to ensure the UI is up to date
+      setRefreshTrigger(prev => prev + 1);
+      
       toast.success("Chat deleted successfully");
     } catch (error) {
       console.error('Error deleting chat:', error);
@@ -281,7 +286,11 @@ const Messages = () => {
       {selectedChat && user && (
         <ChatModal 
           isOpen={!!selectedChat}
-          onClose={() => setSelectedChat(null)}
+          onClose={() => {
+            setSelectedChat(null);
+            // Refresh the chat list after closing modal
+            setRefreshTrigger(prev => prev + 1);
+          }}
           listingId={selectedChat.listing_id}
           listingTitle={selectedChat.listing?.title || 'Unknown Product'}
           userId={user.id}
