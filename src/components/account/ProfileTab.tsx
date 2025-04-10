@@ -1,7 +1,6 @@
 
 import React, { useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useProfile } from "@/contexts/ProfileContext";
 import { Camera, User } from "lucide-react";
@@ -103,42 +102,13 @@ export const ProfileTab = ({ handleSignOut }: { handleSignOut: () => Promise<voi
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1 cl-black">Bio</label>
-          <Textarea 
-            value={profile.bio || ""} 
-            onChange={(e) => setProfile({...profile, bio: e.target.value})}
-            placeholder="Tell us a bit about yourself"
-            rows={4}
+          <label className="block text-sm font-medium text-gray-700 mb-1 cl-black">Location</label>
+          <Input 
+            type="text" 
+            value={profile.location || ""} 
+            onChange={(e) => setProfile({...profile, location: e.target.value})}
+            placeholder="Enter your location"
           />
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1 cl-black">Phone Number</label>
-            <Input 
-              type="tel" 
-              value={profile.phoneNumber || ""} 
-              onChange={(e) => setProfile({...profile, phoneNumber: e.target.value})}
-              placeholder="Enter your phone number"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1 cl-black">Location</label>
-            <Input 
-              type="text" 
-              value={profile.location || ""} 
-              onChange={(e) => setProfile({...profile, location: e.target.value})}
-              placeholder="Enter your location"
-            />
-          </div>
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1 cl-black">Account Created</label>
-          <p className="text-gray-900">
-            {user?.created_at ? new Date(user.created_at).toLocaleDateString() : "-"}
-          </p>
         </div>
         
         <div className="flex justify-between items-center pt-4">

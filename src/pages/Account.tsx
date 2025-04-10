@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -13,8 +14,6 @@ const Account = () => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Partial<UserProfile>>({
     fullName: "",
-    bio: "",
-    phoneNumber: "",
     location: "",
   });
   const [wishlistedItems, setWishlistedItems] = useState<ListingCardType[]>([]);

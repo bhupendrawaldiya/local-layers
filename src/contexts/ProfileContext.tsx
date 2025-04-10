@@ -23,8 +23,6 @@ export const ProfileProvider = ({ children, saveProfileFn }: { children: ReactNo
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Partial<UserProfile>>({
     fullName: "",
-    bio: "",
-    phoneNumber: "",
     location: "",
   });
   const [wishlistedItems, setWishlistedItems] = useState<ListingCardType[]>([]);
