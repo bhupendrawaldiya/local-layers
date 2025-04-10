@@ -52,11 +52,7 @@ export function useChat(userId: string, listingId: number, existingChatId?: stri
         
         if (!listing.seller_id) {
           console.error('No seller_id found for listing:', listingId);
-          toast({
-            title: "Error",
-            description: "Could not find the seller for this listing",
-            variant: "destructive"
-          });
+          toast.error("Could not find the seller for this listing");
           setIsLoading(false);
           return;
         }
@@ -95,11 +91,7 @@ export function useChat(userId: string, listingId: number, existingChatId?: stri
         }
       } catch (error) {
         console.error('Error initializing chat:', error);
-        toast({
-          title: "Error",
-          description: "Failed to start chat",
-          variant: "destructive"
-        });
+        toast.error("Failed to start chat");
       } finally {
         setIsLoading(false);
       }
@@ -121,11 +113,7 @@ export function useChat(userId: string, listingId: number, existingChatId?: stri
       
       if (error) {
         console.error('Error loading messages:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load messages",
-          variant: "destructive"
-        });
+        toast.error("Failed to load messages");
         return;
       }
       
@@ -194,11 +182,7 @@ export function useChat(userId: string, listingId: number, existingChatId?: stri
       
     } catch (error) {
       console.error('Error sending message:', error);
-      toast({
-        title: "Error",
-        description: "Failed to send message",
-        variant: "destructive"
-      });
+      toast.error("Failed to send message");
     }
   };
 
@@ -230,18 +214,11 @@ export function useChat(userId: string, listingId: number, existingChatId?: stri
       // Update local state
       setMessages(current => current.filter(msg => msg.id !== messageId));
       
-      toast({
-        title: "Success",
-        description: "Message deleted",
-      });
+      toast.success("Message deleted");
       
     } catch (error) {
       console.error('Error deleting message:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete message",
-        variant: "destructive"
-      });
+      toast.error("Failed to delete message");
     }
   };
 
