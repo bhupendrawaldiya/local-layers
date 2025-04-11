@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from "react";
-import { X, Trash2 } from "lucide-react";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import MessageList from "./MessageList";
 import ChatInput from "./ChatInput";
@@ -33,7 +34,7 @@ const ChatModal = ({
   chatId: existingChatId 
 }: ChatModalProps) => {
   
-  const { chatId, messages, isLoading, sendMessage, deleteMessage, deleteChat } = useChat(userId, listingId, existingChatId);
+  const { chatId, messages, isLoading, sendMessage } = useChat(userId, listingId, existingChatId);
   const [otherUserId, setOtherUserId] = useState<string | null>(null);
   const [otherUserInfo, setOtherUserInfo] = useState<UserInfo | null>(null);
   
@@ -107,37 +108,6 @@ const ChatModal = ({
     }
   };
   
-  const handleDeleteChat = async () => {
-    if (!chatId) return;
-    
-    try {
-      console.log('Attempting to delete chat:', chatId);
-      const success = await deleteChat();
-      if (success) {
-        console.log('Chat deleted successfully');
-        toast.success("Chat deleted successfully");
-        // Close the modal and notify parent component
-        onClose();
-        if (onMessageSent) {
-          onMessageSent(); // Use the existing callback to refresh the list
-        }
-      } else {
-        console.log('Failed to delete chat');
-        toast.error("Failed to delete chat");
-      }
-    } catch (error) {
-      console.error('Error deleting chat:', error);
-      toast.error("Failed to delete chat");
-    }
-  };
-  
-  const handleDeleteMessage = async (messageId: string) => {
-    await deleteMessage(messageId);
-    if (onMessageSent) {
-      onMessageSent(); // Refresh the message list in parent component
-    }
-  };
-  
   // Format the user display name nicely
   const userDisplayName = otherUserInfo?.fullName || 
                           otherUserInfo?.email || 
@@ -157,13 +127,6 @@ const ChatModal = ({
           </div>
           <div className="flex items-center gap-2">
             <button 
-              onClick={handleDeleteChat}
-              className="text-red-500 hover:text-red-700"
-              title="Delete chat"
-            >
-              <Trash2 className="w-5 h-5" />
-            </button>
-            <button 
               onClick={onClose}
               className="text-gray-500 hover:text-gray-700"
               title="Close chat"
@@ -177,7 +140,6 @@ const ChatModal = ({
           messages={messages} 
           currentUserId={userId} 
           isLoading={isLoading}
-          onDeleteMessage={handleDeleteMessage}
         />
         
         <ChatInput 

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -6,18 +5,6 @@ import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import ChatModal from "@/components/chat/ChatModal";
-import { Trash2 } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 
 interface Chat {
   id: string;
@@ -140,46 +127,6 @@ const Messages = () => {
     setSelectedChat(chat);
   };
 
-  const handleDeleteChat = async (chatId: string) => {
-    try {
-      console.log('Deleting chat:', chatId);
-      
-      // First delete all messages in the chat
-      const { error: messagesError } = await supabase
-        .from('messages')
-        .delete()
-        .eq('chat_id', chatId);
-      
-      if (messagesError) {
-        console.error('Error deleting messages:', messagesError);
-        throw messagesError;
-      }
-      
-      console.log('Messages deleted successfully, now deleting chat');
-      
-      // Then delete the chat itself
-      const { error: chatError } = await supabase
-        .from('chats')
-        .delete()
-        .eq('id', chatId);
-      
-      if (chatError) {
-        console.error('Error deleting chat:', chatError);
-        throw chatError;
-      }
-      
-      console.log('Chat deleted successfully');
-      
-      // Update the local state to remove the deleted chat
-      setChats(prevChats => prevChats.filter(chat => chat.id !== chatId));
-      
-      toast.success("Chat deleted successfully");
-    } catch (error) {
-      console.error('Error deleting chat:', error);
-      toast.error("Failed to delete chat");
-    }
-  };
-
   const handleChatUpdate = () => {
     if (user) {
       fetchChats(user.id);
@@ -237,35 +184,6 @@ const Messages = () => {
                       <h3 className="font-medium text-gray-900">
                         {chat.listing?.title || 'Unknown Product'}
                       </h3>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="text-gray-400 hover:text-red-500"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Chat</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete this chat? This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction 
-                              onClick={() => handleDeleteChat(chat.id)}
-                              className="bg-red-500 hover:bg-red-600"
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
                     </div>
                     {chat.last_message ? (
                       <>
