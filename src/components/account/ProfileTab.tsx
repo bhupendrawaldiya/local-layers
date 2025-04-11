@@ -50,6 +50,8 @@ export const ProfileTab = ({ handleSignOut }: { handleSignOut: () => Promise<voi
     fileInputRef.current?.click();
   };
 
+  const userEmail = user?.email || (user?.app_metadata?.provider === 'google' && user?.user_metadata?.email) || '';
+
   return (
     <div className="bg-white shadow rounded-lg p-6 md:p-8">
       <h1 className="text-2xl font-semibold mb-6 cl-black">Profile Information</h1>
@@ -87,7 +89,7 @@ export const ProfileTab = ({ handleSignOut }: { handleSignOut: () => Promise<voi
       <div className="space-y-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1 cl-black">Email</label>
-          <Input type="email" value={user?.email || ""} disabled className="bg-gray-50" />
+          <Input type="email" value={userEmail} disabled className="bg-gray-50" />
           <p className="mt-1 text-xs text-gray-500 cl-black">Email cannot be changed</p>
         </div>
         

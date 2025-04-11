@@ -17,17 +17,28 @@ interface ProfileContextType {
   saveProfile: () => Promise<void>;
 }
 
+interface ProfileProviderProps {
+  children: ReactNode;
+  saveProfileFn: () => Promise<void>;
+  initialUser?: User | null;
+  initialProfile?: Partial<UserProfile>;
+  initialIsSaving?: boolean;
+}
+
 const ProfileContext = createContext<ProfileContextType | undefined>(undefined);
 
-export const ProfileProvider = ({ children, saveProfileFn }: { children: ReactNode, saveProfileFn: () => Promise<void> }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<Partial<UserProfile>>({
-    fullName: "",
-    location: "",
-  });
+export const ProfileProvider = ({ 
+  children, 
+  saveProfileFn,
+  initialUser = null,
+  initialProfile = { fullName: "", location: "" },
+  initialIsSaving = false
+}: ProfileProviderProps) => {
+  const [user, setUser] = useState<User | null>(initialUser);
+  const [profile, setProfile] = useState<Partial<UserProfile>>(initialProfile);
   const [wishlistedItems, setWishlistedItems] = useState<ListingCardType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+  const [isSaving, setIsSaving] = useState(initialIsSaving);
 
   return (
     <ProfileContext.Provider

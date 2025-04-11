@@ -58,19 +58,35 @@ const Account = () => {
         .eq('id', userId)
         .single();
       
-      if (error && error.code !== 'PGRST116') {
-        // PGRST116 is "no rows found" error, we can ignore it for new users
+      if (error) {
         console.error("Error fetching profile:", error);
-        toast.error("Failed to load profile data");
+        
+        if (error.code === '42P01') {
+          // Table doesn't exist, create it
+          await createProfilesTable();
+          // Then continue to set default profile
+        } else if (error.code !== 'PGRST116') {
+          // PGRST116 is "no rows found" error, we can ignore it for new users
+          toast.error("Failed to load profile data");
+        }
       }
+
+      // Get email from user auth info
+      const email = user?.email || 
+        (user?.app_metadata?.provider === 'google' && user?.user_metadata?.email) || '';
+      
+      // Get name from user metadata if available (especially for Google login)
+      const defaultName = user?.user_metadata?.full_name || 
+                          user?.user_metadata?.name ||
+                          email?.split('@')[0] || '';
 
       // Set profile with data from database or defaults
       setProfile({
         id: userId,
-        email: user?.email || "",
-        fullName: data?.full_name || "",
-        location: data?.location || "",
-        avatar: data?.avatar_url || "",
+        email: email,
+        fullName: data?.full_name || defaultName,
+        location: data?.location || '',
+        avatar: data?.avatar_url || '',
         created_at: user?.created_at || new Date().toISOString(),
       });
     } catch (error) {
@@ -78,6 +94,17 @@ const Account = () => {
       toast.error("Failed to load user profile");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const createProfilesTable = async () => {
+    try {
+      const { error } = await supabase.rpc('create_profiles_if_not_exists');
+      if (error) {
+        console.error('Error creating profiles table:', error);
+      }
+    } catch (error) {
+      console.error('Error calling RPC function:', error);
     }
   };
 
@@ -133,6 +160,10 @@ const Account = () => {
     
     setIsSaving(true);
     try {
+      // Create profiles table if it doesn't exist
+      await createProfilesTable();
+      
+      // Try to upsert profile data
       const { error } = await supabase
         .from('profiles')
         .upsert({
@@ -141,7 +172,7 @@ const Account = () => {
           location: profile.location,
           avatar_url: profile.avatar,
           updated_at: new Date().toISOString()
-        });
+        }, { onConflict: 'id' });
 
       if (error) throw error;
       
@@ -185,7 +216,12 @@ const Account = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-      <ProfileProvider saveProfileFn={saveProfile}>
+      <ProfileProvider 
+        initialUser={user}
+        initialProfile={profile}
+        initialIsSaving={isSaving}
+        saveProfileFn={saveProfile}
+      >
         <AccountLayout handleSignOut={handleSignOut} />
       </ProfileProvider>
     </div>
