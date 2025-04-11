@@ -167,9 +167,7 @@ const Messages = () => {
       
       console.log('Chat deleted successfully');
       
-      setChats(chats.filter(chat => chat.id !== chatId));
-      
-      setRefreshTrigger(prev => prev + 1);
+      setChats(prevChats => prevChats.filter(chat => chat.id !== chatId));
       
       toast.success("Chat deleted successfully");
     } catch (error) {
@@ -290,7 +288,7 @@ const Messages = () => {
           isOpen={!!selectedChat}
           onClose={() => {
             setSelectedChat(null);
-            setRefreshTrigger(prev => prev + 1);
+            handleChatUpdate();
           }}
           listingId={selectedChat.listing_id}
           listingTitle={selectedChat.listing?.title || 'Unknown Product'}
