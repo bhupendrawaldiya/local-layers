@@ -51,12 +51,28 @@ const Account = () => {
   const fetchUserProfile = async (userId: string) => {
     setIsLoading(true);
     try {
-      setProfile(prev => ({
-        ...prev,
+      // Try to fetch existing profile data
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') {
+        // PGRST116 is "no rows found" error, we can ignore it for new users
+        console.error("Error fetching profile:", error);
+        toast.error("Failed to load profile data");
+      }
+
+      // Set profile with data from database or defaults
+      setProfile({
         id: userId,
         email: user?.email || "",
+        fullName: data?.full_name || "",
+        location: data?.location || "",
+        avatar: data?.avatar_url || "",
         created_at: user?.created_at || new Date().toISOString(),
-      }));
+      });
     } catch (error) {
       console.error("Error fetching user profile:", error);
       toast.error("Failed to load user profile");
@@ -117,6 +133,26 @@ const Account = () => {
     
     setIsSaving(true);
     try {
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          full_name: profile.fullName,
+          location: profile.location,
+          avatar_url: profile.avatar,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+      
+      // Also update user metadata for easier access in other places
+      await supabase.auth.updateUser({
+        data: { 
+          full_name: profile.fullName,
+          location: profile.location
+        }
+      });
+      
       toast.success("Profile updated successfully");
     } catch (error) {
       console.error("Error saving profile:", error);

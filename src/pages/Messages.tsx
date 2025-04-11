@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -19,6 +20,8 @@ interface Chat {
     created_at: string;
     sender_id: string;
   };
+  other_user_name?: string;
+  other_user_location?: string;
 }
 
 const Messages = () => {
@@ -97,7 +100,8 @@ const Messages = () => {
 
       console.log('Chats data:', data);
 
-      const chatsWithLastMessage = await Promise.all(data.map(async (chat) => {
+      const chatsWithDetails = await Promise.all(data.map(async (chat) => {
+        // Get the last message for each chat
         const { data: messages, error: messagesError } = await supabase
           .from('messages')
           .select('content, created_at, sender_id')
@@ -107,14 +111,43 @@ const Messages = () => {
 
         if (messagesError) throw messagesError;
 
+        // Determine who is the other user in this chat
+        const otherUserId = chat.buyer_id === userId ? chat.seller_id : chat.buyer_id;
+        
+        // First try to get profile from profiles table
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('full_name, location')
+          .eq('id', otherUserId)
+          .single();
+          
+        let otherUserName = `User ${otherUserId.substring(0, 4)}...`;
+        let otherUserLocation = '';
+        
+        if (!profileError && profileData) {
+          otherUserName = profileData.full_name || otherUserName;
+          otherUserLocation = profileData.location || '';
+        } else {
+          // Fall back to auth metadata
+          const { data: userData } = await supabase.auth.admin.getUserById(otherUserId);
+          if (userData && userData.user) {
+            otherUserName = userData.user.user_metadata?.full_name || 
+                          userData.user.email?.split('@')[0] || 
+                          otherUserName;
+            otherUserLocation = userData.user.user_metadata?.location || '';
+          }
+        }
+
         return {
           ...chat,
-          last_message: messages && messages.length > 0 ? messages[0] : undefined
+          last_message: messages && messages.length > 0 ? messages[0] : undefined,
+          other_user_name: otherUserName,
+          other_user_location: otherUserLocation
         };
       }));
 
-      console.log('Chats with last message:', chatsWithLastMessage);
-      setChats(chatsWithLastMessage);
+      console.log('Chats with details:', chatsWithDetails);
+      setChats(chatsWithDetails);
     } catch (error) {
       console.error('Error fetching chats:', error);
       toast.error('Failed to load conversations');
@@ -185,6 +218,10 @@ const Messages = () => {
                         {chat.listing?.title || 'Unknown Product'}
                       </h3>
                     </div>
+                    <p className="text-sm text-gray-700">
+                      {chat.other_user_name} 
+                      {chat.other_user_location ? ` (${chat.other_user_location})` : ''}
+                    </p>
                     {chat.last_message ? (
                       <>
                         <p className="text-sm line-clamp-1 mt-1 text-gray-600">

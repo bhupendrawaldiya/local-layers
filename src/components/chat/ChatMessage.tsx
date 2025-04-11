@@ -6,6 +6,7 @@ interface Message {
   created_at: string;
   sender_id: string;
   content: string;
+  sender_name?: string;
 }
 
 interface ChatMessageProps {
