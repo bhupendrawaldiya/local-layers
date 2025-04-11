@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
@@ -143,6 +144,7 @@ const Messages = () => {
     try {
       console.log('Deleting chat:', chatId);
       
+      // First delete all messages in the chat
       const { error: messagesError } = await supabase
         .from('messages')
         .delete()
@@ -155,6 +157,7 @@ const Messages = () => {
       
       console.log('Messages deleted successfully, now deleting chat');
       
+      // Then delete the chat itself
       const { error: chatError } = await supabase
         .from('chats')
         .delete()
@@ -167,6 +170,7 @@ const Messages = () => {
       
       console.log('Chat deleted successfully');
       
+      // Update the local state to remove the deleted chat
       setChats(prevChats => prevChats.filter(chat => chat.id !== chatId));
       
       toast.success("Chat deleted successfully");
